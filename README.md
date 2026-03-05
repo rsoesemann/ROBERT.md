@@ -14,14 +14,14 @@ The hard part isn't *what* to put in these files — it's *where*. What's mine i
 <pre>┌──────────────────────────────────────────────────────────────┐
 │  Me (<a href="https://github.com/rsoesemann/ROBERT.md">ROBERT.md</a>)                                              │
 │  How I talk. How I code. What annoys me.                     │
-│  <a href="SOUL.md">SOUL.md</a>, <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                       │
+│  <a href="claude/SOUL.md">SOUL.md</a>, <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  Aquiva (<a href="https://github.com/AquivaLabs/AQUIVA.md">AQUIVA.md</a>)                                    │  │
 │  │  Shared conventions. Company-wide skills & workflows.  │  │
 │  │                                                        │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
-│  │  │  Project (e.g. <a href="https://github.com/aquivalabs/my-org-butler">my-org-butler</a>)                     │  │  │
+│  │  │  Project (e.g. <a href="https://github.com/aquivalabs/my-org-butler">my-org-butler</a>)                    │  │  │
 │  │  │  Domain model. Features. Project-specific stuff. │  │  │
 │  │  │  .claude/CLAUDE.md, .claude/skills/              │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
@@ -34,9 +34,9 @@ Claude Code [merges all of this](https://code.claude.com/docs/en/best-practices)
 
 ### Instructions
 
-**[`SOUL.md`](SOUL.md)** — Codes my style. Snarky, German, no fluff. So the AI talks like a sharp colleague, not a support bot. Tool-agnostic — lives at the root so any AI tool can find it. Inspired by [Peter Steinberger's OpenClaw](https://github.com/openclaw/openclaw).
+**[`claude/SOUL.md`](claude/SOUL.md)** — My personality. Snarky, German, no fluff. So the AI talks like a sharp colleague, not a support bot. Inspired by [Peter Steinberger's OpenClaw](https://github.com/openclaw/openclaw). Referenced from `CLAUDE.md` and symlinked into `~/.claude/`.
 
-**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Non-negotiable.
+**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Points to SOUL.md for tone. Non-negotiable.
 
 **[`claude/rules/salesforce/`](claude/rules/salesforce/)** — My brutal, [PMD-backed](claude/skills/sf-code-analyzer/pmd-ruleset.xml) Apex standards. The machine checks what I forget.
 
@@ -58,6 +58,7 @@ I run [`install.sh`](install.sh) once. It symlinks everything into `~/.claude/`,
 
 ```text
 ~/.claude/CLAUDE.md                   →  this repo/claude/CLAUDE.md
+~/.claude/SOUL.md                     →  this repo/claude/SOUL.md
 ~/.claude/settings.json               →  this repo/claude/settings.json
 ~/.claude/rules/                      →  this repo/claude/rules/
 ~/.claude/skills/sf-code-analyzer/    →  this repo/claude/skills/sf-code-analyzer/

@@ -1,4 +1,9 @@
-# Philosophy
+# Your Character
+
+**Read [SOUL.md](SOUL.md) first** — personality, tone, and communication style. Non-negotiable.
+
+
+# Coding Philosophy
 
 1. **Readability over cleverness** - Code is read far more than it's written. Every pattern here optimizes for the reader, not the writer.
 2. **Simplicity over sophistication** - No complex package hierarchies or enterprise patterns. Flat folders, simple names, minimal abstraction.
