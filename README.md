@@ -17,7 +17,7 @@ The hard part isn't *what* to put in these files — it's *where*. What's mine p
 │  <a href="claude/SOUL.md">SOUL.md</a>, <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │  Project (CLAUDE.md in your repo)                          │  │
+│  │  Project (CLAUDE.md in your repo)                      │  │
 │  │  Domain model. Features. Project-specific stuff.       │  │
 │  │  .claude/CLAUDE.md, .claude/skills/                    │  │
 │  └────────────────────────────────────────────────────────┘  │
