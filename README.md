@@ -9,7 +9,7 @@ This repo is me trying to make sense of all of that. One place for the stuff tha
 
 ## The layers
 
-The hard part isn't *what* to put in these files — it's *where*. What's mine is different from what's [Aquiva](https://aquivalabs.com)'s, which is different from what a specific project needs.
+The hard part isn't *what* to put in these files — it's *where*. What's mine personally is different from what a specific project needs.
 
 <pre>┌──────────────────────────────────────────────────────────────┐
 │  Me (<a href="https://github.com/rsoesemann/ROBERT.md">ROBERT.md</a>)                                              │
@@ -17,14 +17,9 @@ The hard part isn't *what* to put in these files — it's *where*. What's mine i
 │  <a href="claude/SOUL.md">SOUL.md</a>, <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │  Aquiva (<a href="https://github.com/AquivaLabs/AQUIVA.md">AQUIVA.md</a>)                                    │  │
-│  │  Shared conventions. Company-wide skills & workflows.  │  │
-│  │                                                        │  │
-│  │  ┌──────────────────────────────────────────────────┐  │  │
-│  │  │  Project (e.g. <a href="https://github.com/aquivalabs/my-org-butler">my-org-butler</a>)                    │  │  │
-│  │  │  Domain model. Features. Project-specific stuff. │  │  │
-│  │  │  .claude/CLAUDE.md, .claude/skills/              │  │  │
-│  │  └──────────────────────────────────────────────────┘  │  │
+│  │  Project (CLAUDE.md in your repo)                          │  │
+│  │  Domain model. Features. Project-specific stuff.       │  │
+│  │  .claude/CLAUDE.md, .claude/skills/                    │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘</pre>
 
@@ -68,14 +63,4 @@ After I pull changes, the next session gets them automatically — symlinks alwa
 
 ### Multiple repos, one skills directory
 
-`~/.claude/skills/` is a real directory, not a symlink. This is intentional — it lets multiple config repos contribute skills to the same place. My personal repo, the [Aquiva company repo](https://github.com/AquivaLabs/AQUIVA.md), and any project can all add skills. Each install script symlinks its individual skill folders in, and they coexist:
-
-```text
-~/.claude/skills/
-├── sf-code-analyzer/    →  from ROBERT.md (personal)
-├── assess-codebase/     →  from AQUIVA.md (company)
-├── some-personal-skill/ →  from ROBERT.md only
-└── some-company-skill/  →  from AQUIVA.md only
-```
-
-When the same skill exists in both, the last `install.sh` to run wins — that's fine when the content is identical. For project-specific overrides, a project's own `.claude/skills/` always takes precedence over `~/.claude/skills/`.
+`~/.claude/skills/` is a real directory, not a symlink. This is intentional — it lets multiple config repos contribute skills to the same place. Each install script symlinks its individual skill folders in, and they coexist. For project-specific overrides, a project's own `.claude/skills/` always takes precedence over `~/.claude/skills/`.
