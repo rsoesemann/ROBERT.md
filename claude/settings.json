@@ -58,7 +58,9 @@
       "Skill(simplify)",
       "Skill(simplify:*)",
       "Skill(claude-api)",
-      "Skill(claude-api:*)"
+      "Skill(claude-api:*)",
+      "Bash(xargs ls:*)"
     ]
-  }
+  },
+  "effortLevel": "medium"
 }

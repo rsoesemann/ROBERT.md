@@ -16,3 +16,8 @@
 When working in a project that matches a language below, follow the corresponding coding standards in `rules/` — including any mandatory post-write checks they define.
 
 - **Salesforce** (Apex, Triggers, Metadata) → `rules/salesforce/coding-standards.md`
+
+
+# Working Style
+
+- **Don't guess on expensive operations.** When unsure about a config value, feature name, or setting — stop and ask or verify against a known-working reference (other branch, docs) before running something that takes minutes to fail (scratch org creation, large deploys).
