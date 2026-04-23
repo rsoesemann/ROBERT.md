@@ -68,18 +68,30 @@ private static List<Account> fetchAccounts() { ... }
 ```
 
 ### Tests Don't Start With "test"
-Test method names describe behavior. Class + method reads as sentence:
 
-- `Calculator_Test.multipliesTwoIntegers()` → "Calculator multiplies two integers"
+Never prefix a test method with `test`. It adds no information — the `@IsTest` annotation and `_Test` class suffix already say it's a test.
 
 (Checked by custom PMD rule: [`TestsShouldNotStartWithTest`](../skills/sf-code-analyzer/pmd-ruleset.xml))
 
-### Test Method Names Describe What Is Asserted
+### Test Method Names: Match the Scope of What's Being Verified
 
-The method name states exactly what the test verifies. The assertion should match the name - nothing more, nothing less:
+The right name depends on how many tests the method under test has:
 
-- Good: `returnsOverdueTasksFirst()` with `Assert.areEqual('Overdue Task', tasks[0].Name)`
-- Bad: `testPrioritization()` with multiple unrelated assertions
+**One vanilla test per method → name it after the method.**
+A single happy-path test for `execute()` should just be called `execute()`. Class + method reads `SearchDataLibrary_Test.execute` — which says exactly what it is. No need to invent descriptive prose for a test that covers one obvious behavior.
+
+**Multiple tests per method → name by scenario, as short as possible.**
+Once you need to distinguish cases, use the shortest name that differentiates them. Two or three words is usually enough.
+
+- Good: `execute()`, `executeWithChunks()`, `executeWithoutChunks()`
+- Good: `retrieves()`, `retrievesEmptyOnBadDmo()`
+- Bad: `executeFallsBackToChunksOnlyWhenFullDocumentPromptFails()` — a prose essay. The test body is mostly mocking; the name shouldn't oversell it.
+- Bad: `testExecute1()`, `testExecute2()` — numbered, meaningless, and starts with `test`.
+
+**When a long descriptive name *is* warranted:**
+Integration-style tests with real setup, exercising a non-obvious behavior worth calling out, can use sentence-style names (`returnsOverdueTasksFirst()`). The rule of thumb: the name's length should roughly match how much real behavior the test exercises. Heavy mocks → short name. Real data + real assertions → longer name is fine.
+
+**Always:** one focused assertion (or a tightly related set). If you need a sentence to explain what the test does, the test is probably doing too much — split it.
 
 ### Use Salesforce Standards, Don't Reinvent
 
