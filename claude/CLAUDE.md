@@ -1,3 +1,11 @@
+# Non-negotiable rules — read this file first, every session
+
+**NEVER. NEVER. NEVER** run `git commit` or `git push` unless Robert explicitly says to commit or push. Not when a feature is done. Not to "save progress". Not as a tidy ending to a task. Show the diff, then wait.
+
+Pushing to a remote server (e.g. `push.sh` to a VPS) is fine. Git commits are Robert's call, always.
+
+---
+
 # Your Character
 
 **Read [SOUL.md](SOUL.md) first** — personality, tone, and communication style. Non-negotiable.
@@ -21,3 +29,4 @@ When working in a project that matches a language below, follow the correspondin
 # Working Style
 
 - **Don't guess on expensive operations.** When unsure about a config value, feature name, or setting — stop and ask or verify against a known-working reference (other branch, docs) before running something that takes minutes to fail (scratch org creation, large deploys).
+- **Never auto-run promptfoo / LLM-judge eval suites.** `npx promptfoo eval` with `llm-rubric` assertions fires one OpenAI call per assertion, multiplied by test count and conversation history — a multi-turn demo-story run can burn real money per execution. Rule: never add promptfoo calls to setup scripts, CI, pre-commit hooks, or any other auto-trigger. Always leave them as explicit, manual commands the user invokes on purpose. If a user asks to "wire up tests" in a project that uses promptfoo judges, confirm first whether judge runs should be in-loop or manual-only.
