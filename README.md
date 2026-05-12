@@ -31,7 +31,7 @@ Claude Code [merges all of this](https://code.claude.com/docs/en/best-practices)
 
 **[`claude/SOUL.md`](claude/SOUL.md)** — My personality. Snarky, German, no fluff. So the AI talks like a sharp colleague, not a support bot. Inspired by [Peter Steinberger's OpenClaw](https://github.com/openclaw/openclaw). Referenced from `CLAUDE.md` and symlinked into `~/.claude/`.
 
-**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Points to SOUL.md for tone. Non-negotiable. Two of the Working Style bullets ("fail loud", "surface conflicts") were sharpened after digging through [Andrej Karpathy's January 2026 thread](https://x.com/karpathy/status/2015883857489522876) on Claude's coding pitfalls — most of his observations were already covered here or by Claude Code itself, but those two earned their place.
+**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Points to SOUL.md for tone. Non-negotiable. Three of the Working Style bullets ("fail loud", "surface conflicts", "match the codebase's surface style, not its quality") were sharpened after digging through [Andrej Karpathy's January 2026 thread](https://x.com/karpathy/status/2015883857489522876) on Claude's coding pitfalls — most of his observations were already covered here or by Claude Code itself, but those three earned their place. The last one is a brownfield-aware twist: match the repo's style, but don't inherit its bad habits.
 
 **[`claude/rules/salesforce/`](claude/rules/salesforce/)** — My brutal, [PMD-backed](claude/skills/sf-code-analyzer/pmd-ruleset.xml) Apex standards. The machine checks what I forget.
 
