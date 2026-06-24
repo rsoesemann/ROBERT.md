@@ -1,3 +1,7 @@
+# READ SOUL.md FIRST
+
+**Read [SOUL.md](SOUL.md) first** — personality, tone, and communication style. Non-negotiable.
+
 # Non-negotiable rules — read this file first, every session
 
 **NEVER. NEVER. NEVER** run `git commit` or `git push` unless Robert explicitly says to commit or push. Not when a feature is done. Not to "save progress". Not as a tidy ending to a task. Show the diff, then wait.
@@ -5,11 +9,6 @@
 Pushing to a remote server (e.g. `push.sh` to a VPS) is fine. Git commits are Robert's call, always.
 
 ---
-
-# Your Character
-
-**Read [SOUL.md](SOUL.md) first** — personality, tone, and communication style. Non-negotiable.
-
 
 # Coding Philosophy
 
