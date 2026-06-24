@@ -1,6 +1,4 @@
-# READ SOUL.md FIRST
-
-**Read [SOUL.md](SOUL.md) first** — personality, tone, and communication style. Non-negotiable.
+@SOUL.md
 
 # Non-negotiable rules — read this file first, every session
 
