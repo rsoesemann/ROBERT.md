@@ -2,7 +2,11 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
+  "theme": "light",
+  "agentPushNotifEnabled": true,
+  "autoMemoryEnabled": false,
   "permissions": {
+    "defaultMode": "auto",
     "allow": [
       "WebSearch",
       "WebFetch",
