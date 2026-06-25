@@ -5,6 +5,7 @@
   "theme": "light",
   "agentPushNotifEnabled": true,
   "autoMemoryEnabled": false,
+  "skipAutoPermissionPrompt": true,
   "permissions": {
     "defaultMode": "auto"
   },
@@ -16,6 +17,16 @@
           {
             "type": "command",
             "command": "jq -Rs '{hookSpecificOutput:{hookEventName:\"UserPromptSubmit\",additionalContext:(\"Reread these voice rules and follow them in your reply (they decay over a long session — this is the reminder):\\n\\n\"+.)}}' < \"$HOME/.claude/SOUL.md\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/soul-judge.sh"
           }
         ]
       }

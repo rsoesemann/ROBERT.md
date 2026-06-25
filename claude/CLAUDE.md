@@ -1,5 +1,9 @@
 @SOUL.md
 
+# SOUL judge (test phase)
+
+A `Stop` hook ([hooks/soul-judge.sh](hooks/soul-judge.sh)) sends every finished reply — plus the question it answers — to a fresh Opus instance with SOUL.md as the rubric, prompted to find violations. A clean reply passes silently; a violation blocks the turn and forces a rewrite (max 2, then it gives up so the session can't wedge). Write to pass it: lead with the answer, no setup, narration, validation, headers, "not X but Y", or wrap-up. Rewritten replies end with a `↻ nach SOUL-Judge neu geschrieben — <reason>` marker.
+
 # Non-negotiable rules — read this file first, every session
 
 **NEVER. NEVER. NEVER** run `git commit` or `git push` unless Robert explicitly says to commit or push. Not when a feature is done. Not to "save progress". Not as a tidy ending to a task. Show the diff, then wait.

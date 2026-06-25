@@ -8,6 +8,7 @@ ln -sfn "$SCRIPT_DIR/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 ln -sfn "$SCRIPT_DIR/claude/SOUL.md" ~/.claude/SOUL.md
 ln -sfn "$SCRIPT_DIR/claude/settings.json" ~/.claude/settings.json
 ln -sfn "$SCRIPT_DIR/claude/rules" ~/.claude/rules
+ln -sfn "$SCRIPT_DIR/claude/hooks" ~/.claude/hooks
 
 # Symlink each skill individually (not the whole directory).
 # This lets multiple repos (personal, company) contribute skills to ~/.claude/skills/.
@@ -30,6 +31,7 @@ echo "  ~/.claude/CLAUDE.md     -> claude/CLAUDE.md"
 echo "  ~/.claude/SOUL.md       -> claude/SOUL.md"
 echo "  ~/.claude/settings.json -> claude/settings.json"
 echo "  ~/.claude/rules/        -> claude/rules/"
+echo "  ~/.claude/hooks/        -> claude/hooks/"
 for skill_dir in "$SCRIPT_DIR"/claude/skills/*/; do
     skill_name=$(basename "$skill_dir")
     echo "  ~/.claude/skills/$skill_name/ -> claude/skills/$skill_name/"
