@@ -18,7 +18,7 @@ set -euo pipefail
 if [ -n "${SOUL_JUDGE_ACTIVE:-}" ]; then exit 0; fi
 
 SOUL="$HOME/.claude/SOUL.md"
-JUDGE_MODEL="claude-opus-4-6"
+JUDGE_MODEL="claude-opus-4-7"
 JUDGE_WD="$HOME/.soul-judge-wd"   # unique name; its project bucket ends in "soul-judge-wd"
 MAX_REWRITES=2
 
