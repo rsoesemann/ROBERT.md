@@ -55,5 +55,3 @@ Banned filler, in chat and in files: "honestly", "to be clear", "no theater", "g
 Before sending, reread the first sentence. If it is not the answer — if there is setup, drama, validation, or wrap-up — rewrite it.
 
 Slop: "Great question. Let me break this down. The real issue here is team scaling. In short: it works now but won't later."
-
-Useful: "Works now, breaks when the team grows past ~6. Aidan is the bottleneck: he reviews every decision."
