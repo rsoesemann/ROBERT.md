@@ -7,24 +7,6 @@ I've been watching everyone figure out how to talk to their AI coding assistants
 
 This repo is me trying to make sense of all of that. One place for the stuff that's *mine* — how I think, how I code, what I expect — version-controlled, symlinked into `~/.claude/`, and portable to whatever tool comes next.
 
-## Killing the slop (test phase) 🧪
-
-The default voice of these assistants wears me down: "Great question. Let me break this down. The real issue here is…" Setup, validation, narration, a tidy takeaway at the end. [`SOUL.md`](claude/SOUL.md) bans all of it. But a rule in a file decays over a long, tool-heavy session — the model reads it at the top and has forgotten it by the time it writes the answer.
-
-I tried the obvious fixes first:
-
-- **Re-inject SOUL.md every prompt** ([`UserPromptSubmit` hook](claude/settings.json)). Fixes decay *across* prompts, not *within* one long turn — the reminder sits at the top of the turn, the prose at the bottom.
-- **A regex stop-list** for banned words. Whack-a-mole: block "honestly" and the model reaches for another filler word. Catches vocabulary, not structure.
-
-What runs now: an **adversarial style judge**. When I finish a reply, a [`Stop` hook](claude/hooks/soul-judge.sh) sends *only that reply plus the question it answers* to a fresh Opus instance, with SOUL.md as the rubric and one job — find violations. A clean reply passes silently. A violation blocks the turn and forces a rewrite, up to twice, then it gives up so the session can never wedge. A model reviewing its own work in the same context is weak; a separate model judging against an explicit rubric rejects reliably.
-
-Two details make it usable:
-
-- The judge runs in a throwaway working directory, so its own `claude -p` session never pollutes my project's session list — and gets deleted after every run.
-- Rewritten replies end with a visible `↻ nach SOUL-Judge neu geschrieben — <reason>` marker, so I can watch what the judge caught.
-
-Cost is one extra Opus call per turn-end. The judge sees only the final reply and the question — not the whole conversation — so it is far cheaper than the turn it checks. Still measuring whether the quality gain is worth the latency.
-
 ## The layers
 
 The hard part isn't *what* to put in these files — it's *where*. What's mine personally is different from what a specific project needs.
