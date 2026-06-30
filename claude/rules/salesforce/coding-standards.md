@@ -323,7 +323,7 @@ global with sharing class VerbNounAction {
 | Element | Convention | Example |
 |---------|------------|---------|
 | Custom Objects | PascalCase, no underscores | `ContactSkill__c` |
-| Custom Fields | camelCase, no underscores | `SkillLevel__c` |
+| Custom Fields | PascalCase, no underscores | `SkillLevel__c` |
 | Triggers | Plural object name | `Contacts.trigger` |
 | Test Classes | `_Test` suffix | `Pricing_Test.cls` |
 | Controllers | `Ctrl` suffix | `AccountListCtrl` |
