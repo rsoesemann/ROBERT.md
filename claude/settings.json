@@ -2,15 +2,10 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "theme": "light",
-  "agentPushNotifEnabled": true,
-  "autoMemoryEnabled": false,
-  "skipAutoPermissionPrompt": true,
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "acceptEdits"
   },
-  "model": "claude-opus-4-6",
-  "effortLevel": "medium",
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -22,5 +17,10 @@
         ]
       }
     ]
-  }
+  },
+  "effortLevel": "high",
+  "autoMemoryEnabled": false,
+  "theme": "light",
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
