@@ -35,7 +35,16 @@ Claude Code [merges all of this](https://code.claude.com/docs/en/best-practices)
 
 **[`claude/rules/salesforce/`](claude/rules/salesforce/)** — My brutal, [PMD-backed](claude/skills/sf-code-analyzer/pmd-ruleset.xml) Apex standards. The machine checks what I forget.
 
-**[`claude/settings.json`](claude/settings.json)** — So Claude stops nagging me for permission before every git push.
+**[`claude/settings.json`](claude/settings.json)** — So Claude stops nagging me for permission before every git push. Also carries a `UserPromptSubmit` hook that re-injects SOUL.md with every prompt — the voice rules decay over a long session, this keeps them fresh.
+
+### Opting a project out of SOUL
+
+Some projects don't want the voice rules — a spec-interview skill like Speccy needs Claude to ask questions, which SOUL actively discourages. Two files in the project switch it off:
+
+- **`.claude/.no-soul`** — an empty marker file. The hook in `settings.json` checks for it and skips the SOUL injection in that project.
+- **`.claude/settings.local.json`** with `{"claudeMdExcludes": ["**/SOUL.md"]}` — stops the `@SOUL.md` import from `CLAUDE.md` loading there.
+
+Everything else (the git-commit rules, coding standards) still applies. Delete the marker to switch SOUL back on.
 
 ### Skills
 

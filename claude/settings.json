@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -Rs '{hookSpecificOutput:{hookEventName:\"UserPromptSubmit\",additionalContext:(\"Reread these voice rules and follow them in your reply (they decay over a long session — this is the reminder):\\n\\n\"+.)}}' < \"$HOME/.claude/SOUL.md\" 2>/dev/null || true"
+            "command": "if [ ! -e \"${CLAUDE_PROJECT_DIR:-$PWD}/.claude/.no-soul\" ]; then jq -Rs '{hookSpecificOutput:{hookEventName:\"UserPromptSubmit\",additionalContext:(\"Reread these voice rules and follow them in your reply (they decay over a long session — this is the reminder):\\n\\n\"+.)}}' < \"$HOME/.claude/SOUL.md\"; fi 2>/dev/null || true"
           }
         ]
       }
