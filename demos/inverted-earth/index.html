@@ -52,6 +52,26 @@
   .city.dry { color: #ffe6b0; }
   .city.wet { color: #9fe4ff; border-color: rgba(95, 208, 230, 0.4); }
 
+  /* Islands share the layout, but sit a shade cooler so the two kinds of place
+     stay apart when both are on. */
+  .island {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    font-style: italic;
+    letter-spacing: 0.01em;
+    padding: 1px 6px 2px;
+    border-radius: 999px;
+    background: rgba(6, 14, 12, 0.72);
+    border: 1px solid rgba(140, 220, 180, 0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    will-change: transform;
+  }
+  .island.dry { color: #c8ffdf; }
+  .island.wet { color: #8fe8bd; }
+
   #panel {
     position: absolute;
     top: 14px;
@@ -205,19 +225,20 @@
     </div>
 
     <div class="row">
-      <label>Vertical exaggeration <b id="vExag">70×</b></label>
-      <input type="range" id="exag" min="1" max="200" value="70" step="1">
+      <label>Vertical exaggeration <b id="vExag">45×</b></label>
+      <input type="range" id="exag" min="1" max="200" value="45" step="1">
     </div>
 
     <div class="row">
-      <label>Peak contrast <b id="vGamma">1.8</b></label>
-      <input type="range" id="gamma" min="100" max="320" value="180" step="5">
+      <label>Peak contrast <b id="vGamma">1</b></label>
+      <input type="range" id="gamma" min="100" max="320" value="100" step="5">
     </div>
 
     <div class="checks">
       <label><input type="checkbox" id="spin" checked> Auto-rotate</label>
       <label><input type="checkbox" id="water" checked> Show water</label>
       <label><input type="checkbox" id="cities" checked> Show cities</label>
+      <label><input type="checkbox" id="islands" checked> Show islands</label>
     </div>
 
     <div id="legend">
@@ -302,6 +323,45 @@ const CITIES = [
   ["Ushuaia",       -54.802,  -68.303]
 ];
 
+// Islands are the best part of the inversion: every one of them is a high point
+// in the real world, so inverted it becomes a pit in the middle of the new
+// continent. Hawaii ends up as a crater about 7 km deep, surrounded by what used
+// to be the floor of the Pacific.
+const ISLANDS = [
+  ["Svalbard",           78.220,   15.650],
+  ["Faroe Islands",      62.000,   -6.790],
+  ["Azores",             38.520,  -28.630],
+  ["Bermuda",            32.310,  -64.750],
+  ["Madeira",            32.750,  -16.960],
+  ["Canary Islands",     28.290,  -16.620],
+  ["Midway",             28.200, -177.370],
+  ["Okinawa",            26.340,  127.800],
+  ["Hawai\u02BBi",         19.600, -155.500],
+  ["Cape Verde",         15.120,  -23.610],
+  ["Guam",               13.440,  144.790],
+  ["Socotra",            12.470,   53.820],
+  ["Palau",               7.510,  134.580],
+  ["Maldives",            3.200,   73.220],
+  ["S\u00E3o Tom\u00E9",         0.250,    6.610],
+  ["Gal\u00E1pagos",        -0.620,  -90.350],
+  ["Seychelles",         -4.680,   55.490],
+  ["Ascension",          -7.950,  -14.360],
+  ["Marquesas",          -9.780, -139.060],
+  ["Christmas Island",  -10.490,  105.630],
+  ["Cocos Islands",     -12.130,   96.870],
+  ["St Helena",         -15.960,   -5.720],
+  ["Tahiti",            -17.650, -149.430],
+  ["Fiji",              -17.710,  178.070],
+  ["Mauritius",         -20.350,   57.550],
+  ["New Caledonia",     -21.300,  165.500],
+  ["Pitcairn",          -25.070, -130.100],
+  ["Easter Island",     -27.110, -109.350],
+  ["Tristan da Cunha",  -37.110,  -12.290],
+  ["Kerguelen",         -49.350,   70.220],
+  ["Falklands",         -51.750,  -59.000],
+  ["South Georgia",     -54.430,  -36.590]
+];
+
 // ---------------------------------------------------------------- shaders
 
 // toFixed because GLSL will not convert an int literal into a const float —
@@ -379,7 +439,9 @@ const TERRAIN_FRAG = `
   varying vec3 vNormalW;
   varying vec3 vPosW;
 
-  vec3 landColor(float h, float absLat) {
+  // slope is the true terrain gradient, dimensionless and free of the vertical
+  // exaggeration — a 1000 m rise across one 20 km cell is 0.05.
+  vec3 landColor(float h, float absLat, float slope) {
     vec3 c = mix(vec3(0.15, 0.32, 0.14), vec3(0.35, 0.44, 0.19), smoothstep(0.0, 500.0, h));
     c = mix(c, vec3(0.51, 0.42, 0.23), smoothstep(400.0, 1600.0, h));
     c = mix(c, vec3(0.46, 0.34, 0.26), smoothstep(1500.0, 3000.0, h));
@@ -387,7 +449,12 @@ const TERRAIN_FRAG = `
     // The snow line drops towards the poles, otherwise Greenland and Antarctica
     // come out green on the real Earth.
     float snow = mix(4600.0, 150.0, smoothstep(40.0, 72.0, absLat));
-    return mix(c, vec3(0.93, 0.94, 0.96), smoothstep(snow, snow + 600.0, h));
+    // Snow does not hold on a steep face. Inverted, the abyssal plains sit at
+    // 4-6 km and everything above the snow line goes white, so without this the
+    // new continents are a featureless sheet; with it, the rock shows through
+    // wherever the ground pitches and the relief becomes readable again.
+    float held = smoothstep(snow, snow + 600.0, h) * (1.0 - smoothstep(0.020, 0.075, slope));
+    return mix(c, vec3(0.93, 0.94, 0.96), held);
   }
 
   vec3 seaColor(float depth) {
@@ -414,20 +481,17 @@ const TERRAIN_FRAG = `
     vec3 north = cross(n, east);
     float dsEast  = 2.0 * e.x * 6.2831853 * EARTH_R * cosLat;
     float dsNorth = 2.0 * e.y * 3.1415927 * EARTH_R;
-    vec3 N = normalize(n
-      - east  * ((hR - hL) * uExag / dsEast)
-      - north * ((hU - hD) * uExag / dsNorth));
+    float gEast = (hR - hL) / dsEast;
+    float gNorth = (hU - hD) / dsNorth;
+    vec3 N = normalize(n - east * (gEast * uExag) - north * (gNorth * uExag));
+    float slope = sqrt(gEast * gEast + gNorth * gNorth);
 
-    // The colour ramp is tuned for the real Earth, where land tops out near
-    // 6 km. Inverted, the old abyssal plains sit at 4-6 km and the whole globe
-    // would render as snow, so the ramp is stretched to the range in view.
-    float landScale = mix(1.0, DEPTH_MAX / ELEV_TOP, uMorph);
-    float seaScale  = mix(1.0, ELEV_TOP / DEPTH_MAX, uMorph);
-
+    // The ramp is read off the height in metres, with no rescaling between the
+    // real and the inverted globe. That is the point: an abyssal plain 4-6 km
+    // down really does become 4-6 km up, which is above the snow line, so the
+    // inverted world is a snowfield with the old continents as its seas.
     float absLat = abs(degrees(asin(clamp(n.y, -1.0, 1.0))));
-    vec3 base = mix(seaColor(-h / seaScale),
-                    landColor(h / landScale, absLat),
-                    smoothstep(-40.0, 40.0, h));
+    vec3 base = mix(seaColor(-h), landColor(h, absLat, slope), smoothstep(-40.0, 40.0, h));
 
     vec3 V = normalize(uCam - vPosW);
     float lambert = max(dot(N, uSun), 0.0);
@@ -524,13 +588,25 @@ controls.maxDistance = 9.0;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.45;
 
+// The sun trails the camera by 38 degrees of longitude and sits a little to the
+// north. A fixed sun would be prettier as an image, but half the planet would
+// then be unusable — rotate to the Pacific and you get an unlit disc.
 const SUN = new THREE.Vector3(0.72, 0.34, 0.60).normalize();
+const SUN_LAG = Math.PI * 38 / 180;
+
+function updateSun() {
+  const c = camera.position;
+  const horizontal = Math.hypot(c.x, c.z);
+  const angle = Math.atan2(c.z, c.x) + SUN_LAG;
+  SUN.set(Math.cos(angle) * horizontal, c.y + 0.42 * camera.position.length(), Math.sin(angle) * horizontal)
+     .normalize();
+}
 
 const shared = {
   uHeight: { value: null },
   uMorph:  { value: 1.0 },
-  uExag:   { value: 70.0 },
-  uGamma:  { value: 1.8 },
+  uExag:   { value: 45.0 },
+  uGamma:  { value: 1.0 },
   uTexel:  { value: new THREE.Vector2(1 / TEX_W, 1 / TEX_H) },
   uSun:    { value: SUN },
   uCam:    { value: new THREE.Vector3() }
@@ -592,34 +668,46 @@ function latLonToDir(lat, lon) {
 }
 
 const labelLayer = document.getElementById("labels");
-const cityData = CITIES.map(([name, lat, lon]) => {
-  const el = document.createElement("div");
-  el.className = "city";
-  el.textContent = name;
-  labelLayer.appendChild(el);
-  return { name, lat, lon, dir: latLonToDir(lat, lon), height: 0, el, pos: new THREE.Vector3() };
-});
 
-const markerGeo = new THREE.BufferGeometry();
-markerGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(cityData.length * 3), 3));
-const markers = new THREE.Points(markerGeo, new THREE.PointsMaterial({
-  size: 7, sizeAttenuation: false, map: dotTexture(),
-  transparent: true, depthTest: true, depthWrite: false, color: 0xfff0c8
-}));
-markers.frustumCulled = false;
-markers.renderOrder = 3;
-scene.add(markers);
+// One group per kind: markers and stalks are single buffers rewritten every
+// frame, so a group is the natural unit to switch on and off.
+function makeGroup(list, cssClass, dotColor, stalkColor) {
+  const places = list.map(([name, lat, lon]) => {
+    const el = document.createElement("div");
+    el.className = cssClass;
+    el.textContent = name;
+    labelLayer.appendChild(el);
+    return { name, lat, lon, dir: latLonToDir(lat, lon), height: 0, el, pos: new THREE.Vector3() };
+  });
 
-// Stalks tie drowned cities to sea level — without them they vanish into the
-// dark of the new basins.
-const stalkGeo = new THREE.BufferGeometry();
-stalkGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(cityData.length * 6), 3));
-const stalks = new THREE.LineSegments(stalkGeo, new THREE.LineBasicMaterial({
-  color: 0xffd98a, transparent: true, opacity: 0.5, depthWrite: false
-}));
-stalks.frustumCulled = false;
-stalks.renderOrder = 3;
-scene.add(stalks);
+  const markerGeo = new THREE.BufferGeometry();
+  markerGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(places.length * 3), 3));
+  const markers = new THREE.Points(markerGeo, new THREE.PointsMaterial({
+    size: 7, sizeAttenuation: false, map: dotTexture(),
+    transparent: true, depthTest: true, depthWrite: false, color: dotColor
+  }));
+  markers.frustumCulled = false;
+  markers.renderOrder = 3;
+  scene.add(markers);
+
+  // A stalk ties each place to sea level. Without it a drowned city vanishes
+  // into the dark of the new basins, and an island sunk into a 10 km pit is
+  // impossible to spot at all.
+  const stalkGeo = new THREE.BufferGeometry();
+  stalkGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(places.length * 6), 3));
+  const stalks = new THREE.LineSegments(stalkGeo, new THREE.LineBasicMaterial({
+    color: stalkColor, transparent: true, opacity: 0.5, depthWrite: false
+  }));
+  stalks.frustumCulled = false;
+  stalks.renderOrder = 3;
+  scene.add(stalks);
+
+  return { places, markerGeo, stalkGeo, markers, stalks, cssClass, visible: true };
+}
+
+const cityGroup = makeGroup(CITIES, "city", 0xfff0c8, 0xffd98a);
+const islandGroup = makeGroup(ISLANDS, "island", 0xc6ffe0, 0x8fe8bd);
+const groups = [cityGroup, islandGroup];
 
 function dotTexture() {
   const c = document.createElement("canvas");
@@ -670,7 +758,8 @@ function readHeights(img) {
     console.warn("height sampling unavailable (canvas tainted):", err.message);
     return;
   }
-  for (const city of cityData) city.height = rawHeightAt(city.lat, city.lon);
+  for (const g of groups)
+    for (const place of g.places) place.height = rawHeightAt(place.lat, place.lon);
 }
 
 function texel(ix, iy) {
@@ -706,6 +795,7 @@ const ui = {
   spin: document.getElementById("spin"),
   water: document.getElementById("water"),
   cities: document.getElementById("cities"),
+  islands: document.getElementById("islands"),
   vMorph: document.getElementById("vMorph"),
   vExag: document.getElementById("vExag"),
   vGamma: document.getElementById("vGamma"),
@@ -746,11 +836,13 @@ ui.exag.addEventListener("input", () => { shared.uExag.value = +ui.exag.value; s
 ui.gamma.addEventListener("input", () => { shared.uGamma.value = ui.gamma.value / 100; syncUI(); });
 ui.spin.addEventListener("change", () => { controls.autoRotate = ui.spin.checked; });
 ui.water.addEventListener("change", () => { waterMesh.visible = ui.water.checked; });
-ui.cities.addEventListener("change", () => {
-  const on = ui.cities.checked;
-  markers.visible = stalks.visible = on;
-  labelLayer.style.display = on ? "" : "none";
-});
+function setGroupVisible(group, on) {
+  group.visible = on;
+  group.markers.visible = group.stalks.visible = on;
+  if (!on) for (const place of group.places) place.el.style.display = "none";
+}
+ui.cities.addEventListener("change", () => setGroupVisible(cityGroup, ui.cities.checked));
+ui.islands.addEventListener("change", () => setGroupVisible(islandGroup, ui.islands.checked));
 ui.pNormal.addEventListener("click", () => { morphTarget = 0; ui.morph.value = 0; });
 ui.pInvert.addEventListener("click", () => { morphTarget = 1; ui.morph.value = 100; });
 
@@ -768,44 +860,48 @@ const ndc = new THREE.Vector3();
 const placed = [];
 
 function updateLabels() {
-  if (!ui.cities.checked) return;
   const w = app.clientWidth, h = app.clientHeight;
   const camDist = camera.position.length();
   const camDir = camera.position.clone().normalize();
   const horizon = 1 / camDist; // everything in front of the sphere's horizon
 
-  const mPos = markerGeo.attributes.position.array;
-  const sPos = stalkGeo.attributes.position.array;
   const exag = shared.uExag.value;
   const gamma = shared.uGamma.value;
   const flip = 1 - 2 * shared.uMorph.value;
 
   const visible = [];
-  for (let i = 0; i < cityData.length; i++) {
-    const c = cityData[i];
-    const shown = shape(c.height, gamma) * flip;
-    const r = 1 + (shown / EARTH_R) * exag;
-    c.pos.copy(c.dir).multiplyScalar(r);
-    mPos[i * 3] = c.pos.x; mPos[i * 3 + 1] = c.pos.y; mPos[i * 3 + 2] = c.pos.z;
+  for (const group of groups) {
+    if (!group.visible) continue;
+    const mPos = group.markerGeo.attributes.position.array;
+    const sPos = group.stalkGeo.attributes.position.array;
 
-    // Stalk up to just above sea level; on dry land it is a short stub.
-    const top = Math.max(r, 1.0) + 0.006;
-    sPos[i * 6] = c.pos.x; sPos[i * 6 + 1] = c.pos.y; sPos[i * 6 + 2] = c.pos.z;
-    sPos[i * 6 + 3] = c.dir.x * top; sPos[i * 6 + 4] = c.dir.y * top; sPos[i * 6 + 5] = c.dir.z * top;
+    for (let i = 0; i < group.places.length; i++) {
+      const c = group.places[i];
+      const shown = shape(c.height, gamma) * flip;
+      const r = 1 + (shown / EARTH_R) * exag;
+      c.pos.copy(c.dir).multiplyScalar(r);
+      mPos[i * 3] = c.pos.x; mPos[i * 3 + 1] = c.pos.y; mPos[i * 3 + 2] = c.pos.z;
 
-    if (c.dir.dot(camDir) <= horizon + 0.02) { c.el.style.display = "none"; continue; }
+      // Stalk up to just above sea level; on dry land it is a short stub.
+      const top = Math.max(r, 1.0) + 0.006;
+      sPos[i * 6] = c.pos.x; sPos[i * 6 + 1] = c.pos.y; sPos[i * 6 + 2] = c.pos.z;
+      sPos[i * 6 + 3] = c.dir.x * top; sPos[i * 6 + 4] = c.dir.y * top; sPos[i * 6 + 5] = c.dir.z * top;
 
-    ndc.copy(c.dir).multiplyScalar(top).project(camera);
-    visible.push({
-      c,
-      x: (ndc.x * 0.5 + 0.5) * w,
-      y: (-ndc.y * 0.5 + 0.5) * h - 13,
-      depth: ndc.z,
-      wet: shown < 0
-    });
+      if (c.dir.dot(camDir) <= horizon + 0.02) { c.el.style.display = "none"; continue; }
+
+      ndc.copy(c.dir).multiplyScalar(top).project(camera);
+      visible.push({
+        c,
+        cssClass: group.cssClass,
+        x: (ndc.x * 0.5 + 0.5) * w,
+        y: (-ndc.y * 0.5 + 0.5) * h - 13,
+        depth: ndc.z,
+        wet: shown < 0
+      });
+    }
+    group.markerGeo.attributes.position.needsUpdate = true;
+    group.stalkGeo.attributes.position.needsUpdate = true;
   }
-  markerGeo.attributes.position.needsUpdate = true;
-  stalkGeo.attributes.position.needsUpdate = true;
 
   // Nearest first, then drop whatever overlaps — otherwise Europe is mush.
   visible.sort((a, b) => a.depth - b.depth);
@@ -819,7 +915,7 @@ function updateLabels() {
     if (clash) { v.c.el.style.display = "none"; continue; }
     placed.push({ x: v.x, y: v.y, halfW });
     v.c.el.style.display = "";
-    v.c.el.className = "city " + (v.wet ? "wet" : "dry");
+    v.c.el.className = v.cssClass + " " + (v.wet ? "wet" : "dry");
     v.c.el.style.transform = `translate(-50%,-50%) translate(${v.x.toFixed(1)}px,${v.y.toFixed(1)}px)`;
   }
 }
@@ -838,6 +934,7 @@ function frame() {
   }
 
   controls.update();
+  updateSun();
   shared.uCam.value.copy(camera.position);
   updateLabels();
   renderer.render(scene, camera);

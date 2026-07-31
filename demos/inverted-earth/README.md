@@ -1,13 +1,19 @@
 # Inverted Earth
 
 A rotatable 3D globe with the planet's topography turned inside out. Ocean
-depths become mountains, continents become basins, and the colours flip with
-them — the old sea floor wears greens, browns and snow, the old continents lie
-under water. 42 well-known cities are pinned to their real coordinates, which
-puts every one of them underwater in the inverted world.
+depths become mountains, continents become basins, and the colours follow the
+height, so the old sea floor wears greens, browns and snow while the old
+continents lie under water.
 
 The **Inversion** slider morphs continuously between the real Earth and the
 inverted one, so you can watch the flip happen.
+
+42 cities and 32 islands are pinned to their real coordinates. Both end up
+below sea level in the inverted world, but for different reasons — and the
+islands are the better half of the trick. Every island is a high point in the
+real world, so inverted it becomes a pit in the middle of a new continent. The
+Hawaiian chain reads as a line of craters running across the middle of what
+used to be the floor of the Pacific.
 
 ## Running it
 
@@ -25,16 +31,29 @@ instead of on the terrain. Use the bundled single file for that case.
 |---|---|
 | Inversion | 0% real Earth, 100% fully inverted, anything in between morphs |
 | Vertical exaggeration | Radial scale of the relief, 1×–200× (8 km on a 6371 km sphere is invisible at 1×) |
-| Peak contrast | Exponent applied to the normalised height. 1.0 is the honest linear mapping; higher values flatten the abyssal plains so the trenches tower |
+| Peak contrast | Exponent applied to the normalised height. Defaults to 1.0, the honest linear mapping; higher values flatten the abyssal plains so the trenches tower |
 | Show water | Translucent shell at sea level — the drowned continents show through it |
+| Show cities / islands | Two sets of markers, each with a stalk up to sea level |
 
-## Why "peak contrast" exists
+## Why the inverted globe is white
 
-Most of the sea floor is a 4–6 km abyssal plain. Inverted and scaled linearly,
-the globe becomes one smooth bulge with the trenches barely poking out of it —
-technically faithful, visually dead. Raising the normalised height to a power
-compresses the plains and lets the extremes stand up. It is a deliberate lie
-about the data, which is why it is a slider with an honest setting at 1.0.
+The colour ramp reads the height in metres and is never rescaled between the
+real and the inverted view. That is the point of the thing. An abyssal plain
+4–6 km down really does become 4–6 km up, which is above the snow line, so the
+inverted planet is a snowfield with the old continents as its seas. Rescaling
+the ramp to keep the new continents green would be a nicer picture and a lie.
+
+Snow is stripped from steep faces, which is both true of real mountains and the
+only reason the relief stays readable across a plateau that large. The
+Mid-Atlantic Ridge is the inverse case worth looking for: its crest sits about
+2.5 km down, so inverted it is *lower* than the plains beside it — a bare brown
+valley cutting through the snow.
+
+## Lighting
+
+The sun trails the camera by 38° of longitude and sits to the north, rather
+than being fixed in space. A fixed sun makes a prettier still image and leaves
+half the planet unusable — rotate to the Pacific and you get an unlit disc.
 
 ## Data
 
@@ -56,6 +75,11 @@ The script prints a sanity check on every run. Current numbers:
 | Denver | 1768 m | 1610 m |
 | N Atlantic abyssal plain | −4853 m | ~−5000 m |
 | Challenger Deep | −10361 m | −10924 m |
+
+Islands smaller than a grid cell (about 20 km) are averaged into the seamount
+they sit on, so their pit comes out shallower than reality — Tahiti reads as a
+3 km depression rather than the 5 km its peak would give. The marker is still in
+the right place.
 
 **One known distortion:** the NASA topography saturates at 6400 m. Everest and
 the rest of the high Himalaya are clipped to that value, so inverted they form a
@@ -89,9 +113,9 @@ needed, since `index.html` only references files next to it.
 - The fragment shader samples the same texture at full resolution, so coastlines
   stay crisp even though the mesh is coarser. Normals come from four neighbours,
   spaced in metres and corrected for latitude.
-- The colour ramp is tuned for the real Earth, where land tops out near 6 km.
-  Inverted, the old abyssal plains sit at 4–6 km and everything would render as
-  snow, so the ramp stretches with the inversion.
+- Snow cover is a function of height, latitude and true terrain slope — the
+  slope is taken from the gradient before vertical exaggeration, so the
+  exaggeration slider does not change where snow lies.
 - The water shell uses the same 512×256 tessellation as the terrain on purpose.
   At a coarser resolution its flat facets sag further inward than the flattened
   lowlands rise, and the sea floor breaks through it in a pattern of blobs.
