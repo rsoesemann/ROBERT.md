@@ -1,0 +1,968 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inverted Earth</title>
+
+<style>
+  :root {
+    --ink: #e8edf4;
+    --dim: #8e9bb0;
+    --panel: rgba(12, 17, 27, 0.82);
+    --edge: rgba(140, 165, 200, 0.22);
+    --accent: #5fd0e6;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Safari fails to initialise document scrolling in published artifacts on
+     first paint, so the document never scrolls here — only inner containers. */
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+    margin: 0;
+    background: #05070d;
+    color: var(--ink);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app { position: relative; height: 100%; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  #labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .city {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 1px 6px 2px;
+    border-radius: 999px;
+    background: rgba(6, 10, 18, 0.72);
+    border: 1px solid rgba(150, 175, 210, 0.28);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    will-change: transform;
+  }
+  .city.dry { color: #ffe6b0; }
+  .city.wet { color: #9fe4ff; border-color: rgba(95, 208, 230, 0.4); }
+
+  /* Islands share the layout, but sit a shade cooler so the two kinds of place
+     stay apart when both are on. */
+  .island {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    font-style: italic;
+    letter-spacing: 0.01em;
+    padding: 1px 6px 2px;
+    border-radius: 999px;
+    background: rgba(6, 14, 12, 0.72);
+    border: 1px solid rgba(140, 220, 180, 0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    will-change: transform;
+  }
+  .island.dry { color: #c8ffdf; }
+  .island.wet { color: #8fe8bd; }
+
+  #panel {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 274px;
+    max-height: calc(100% - 28px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 16px 16px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  #panel h1 { margin: 0 0 2px; font-size: 15px; letter-spacing: 0.01em; }
+  #panel .sub { margin: 0 0 14px; font-size: 11.5px; color: var(--dim); }
+
+  .row { margin-bottom: 13px; }
+  .row > label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11.5px;
+    color: var(--dim);
+    margin-bottom: 5px;
+  }
+  .row > label b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  input[type=range] {
+    width: 100%;
+    height: 20px;
+    margin: 0;
+    background: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, #2f6d8a, #7fdcef);
+  }
+  input[type=range]::-moz-range-track {
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, #2f6d8a, #7fdcef);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px; height: 15px; margin-top: -5.5px;
+    border-radius: 50%; background: #eaf6fb;
+    border: 2px solid #2b3b52; cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 13px; height: 13px;
+    border-radius: 50%; background: #eaf6fb;
+    border: 2px solid #2b3b52; cursor: pointer;
+  }
+
+  .presets { display: flex; gap: 6px; margin-bottom: 14px; }
+  .presets button {
+    flex: 1;
+    padding: 6px 4px;
+    font: inherit;
+    font-size: 11.5px;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .presets button:hover { background: rgba(255, 255, 255, 0.12); }
+  .presets button.on { background: rgba(95, 208, 230, 0.2); border-color: var(--accent); }
+
+  .checks { display: grid; gap: 7px; margin-top: 4px; }
+  .checks label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; cursor: pointer; }
+  .checks input { accent-color: var(--accent); width: 14px; height: 14px; }
+
+  #legend {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--edge);
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+  #legend .swatches { display: grid; gap: 4px; margin-top: 7px; }
+  #legend .sw { display: flex; align-items: center; gap: 7px; }
+  #legend .sw i { width: 26px; height: 9px; border-radius: 2px; flex: none; display: block; }
+
+  #hint {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    font-size: 11.5px;
+    color: var(--dim);
+    background: rgba(6, 10, 18, 0.6);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 4px 12px;
+    pointer-events: none;
+  }
+
+  #loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 10px;
+    justify-items: center;
+    background: #05070d;
+    font-size: 13px;
+    color: var(--dim);
+    transition: opacity 0.5s;
+  }
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading .bar {
+    width: 190px; height: 3px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+  }
+  #loading .bar i {
+    display: block; height: 100%; width: 35%;
+    background: var(--accent);
+    animation: slide 1.15s ease-in-out infinite;
+  }
+  @keyframes slide {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(320%); }
+  }
+
+  @media (max-width: 640px) {
+    #panel { width: calc(100% - 28px); max-height: 46%; }
+    #hint { display: none; }
+  }
+</style>
+
+<div id="app">
+  <div id="labels"></div>
+
+  <aside id="panel">
+    <h1>Inverted Earth</h1>
+    <p class="sub">Ocean depths become mountains, continents become basins.</p>
+
+    <div class="presets">
+      <button id="pNormal">Real Earth</button>
+      <button id="pInvert" class="on">Inverted</button>
+    </div>
+
+    <div class="row">
+      <label>Inversion <b id="vMorph">100%</b></label>
+      <input type="range" id="morph" min="0" max="100" value="100" step="1">
+    </div>
+
+    <div class="row">
+      <label>Vertical exaggeration <b id="vExag">45×</b></label>
+      <input type="range" id="exag" min="1" max="200" value="45" step="1">
+    </div>
+
+    <div class="row">
+      <label>Peak contrast <b id="vGamma">1</b></label>
+      <input type="range" id="gamma" min="100" max="320" value="100" step="5">
+    </div>
+
+    <div class="checks">
+      <label><input type="checkbox" id="spin" checked> Auto-rotate</label>
+      <label><input type="checkbox" id="water" checked> Show water</label>
+      <label><input type="checkbox" id="cities" checked> Show cities</label>
+      <label><input type="checkbox" id="islands" checked> Show islands</label>
+    </div>
+
+    <div id="legend">
+      <span id="legendText"></span>
+      <div class="swatches">
+        <div class="sw"><i style="background:linear-gradient(90deg,#40989e,#0d2d4a,#050e28)"></i><span id="legWater"></span></div>
+        <div class="sw"><i style="background:linear-gradient(90deg,#2e5729,#7a6a3c,#eef0f4)"></i><span id="legLand"></span></div>
+      </div>
+      <div style="margin-top:9px" id="extremes"></div>
+    </div>
+  </aside>
+
+  <div id="hint">Drag to rotate · scroll to zoom</div>
+
+  <div id="loading">
+    <div>Loading elevation data …</div>
+    <div class="bar"><i></i></div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+"use strict";
+
+// bundle.py rewrites this line into a data: URI so the page runs with no server
+// and no external requests. Keep the marker.
+const HEIGHTMAP_URL = "heightmap.webp"; /* BUNDLE:HEIGHTMAP */
+
+// Must match build_heightmap.py.
+const SPAN = 17324.0;       // total encoded range in metres
+const DEPTH_MAX = 10924.0;  // Challenger Deep, the lowest encodable value
+const ELEV_TOP = 5882.0;    // highest value actually present in the data
+const EARTH_R = 6371000.0;
+const TEX_W = 2048, TEX_H = 1024;
+
+const DEEPEST = "Mariana Trench, 10,924 m";
+const HIGHEST = "Mount Everest, 8,848 m";
+
+const CITIES = [
+  ["Reykjavík",      64.147,  -21.942],
+  ["Nuuk",           64.181,  -51.694],
+  ["Anchorage",      61.218, -149.900],
+  ["Moscow",         55.756,   37.617],
+  ["Berlin",         52.520,   13.405],
+  ["London",         51.507,   -0.128],
+  ["Vancouver",      49.283, -123.121],
+  ["Paris",          48.857,    2.352],
+  ["Chicago",        41.878,  -87.630],
+  ["Rome",           41.903,   12.496],
+  ["Istanbul",       41.008,   28.978],
+  ["New York",       40.713,  -74.006],
+  ["Madrid",         40.417,   -3.704],
+  ["Beijing",        39.904,  116.407],
+  ["San Francisco",  37.775, -122.419],
+  ["Seoul",          37.567,  126.978],
+  ["Tokyo",          35.676,  139.650],
+  ["Los Angeles",    34.052, -118.244],
+  ["Shanghai",       31.230,  121.474],
+  ["Cairo",          30.044,   31.236],
+  ["Delhi",          28.614,   77.209],
+  ["Kathmandu",      27.717,   85.324],
+  ["Dubai",          25.205,   55.271],
+  ["Havana",         23.113,  -82.366],
+  ["Honolulu",       21.307, -157.858],
+  ["Mexico City",    19.433,  -99.133],
+  ["Mumbai",         19.076,   72.878],
+  ["Bangkok",        13.756,  100.502],
+  ["Lagos",           6.524,    3.379],
+  ["Bogotá",          4.711,  -74.072],
+  ["Singapore",       1.352,  103.820],
+  ["Nairobi",        -1.286,   36.817],
+  ["Jakarta",        -6.208,  106.846],
+  ["Lima",          -12.046,  -77.043],
+  ["La Paz",        -16.490,  -68.119],
+  ["Rio de Janeiro", -22.907, -43.173],
+  ["Perth",         -31.950,  115.860],
+  ["Cape Town",     -33.925,   18.424],
+  ["Sydney",        -33.869,  151.209],
+  ["Buenos Aires",  -34.604,  -58.382],
+  ["Auckland",      -36.848,  174.763],
+  ["Ushuaia",       -54.802,  -68.303]
+];
+
+// Islands are the best part of the inversion: every one of them is a high point
+// in the real world, so inverted it becomes a pit in the middle of the new
+// continent. Hawaii ends up as a crater about 7 km deep, surrounded by what used
+// to be the floor of the Pacific.
+const ISLANDS = [
+  ["Svalbard",           78.220,   15.650],
+  ["Faroe Islands",      62.000,   -6.790],
+  ["Azores",             38.520,  -28.630],
+  ["Bermuda",            32.310,  -64.750],
+  ["Madeira",            32.750,  -16.960],
+  ["Canary Islands",     28.290,  -16.620],
+  ["Midway",             28.200, -177.370],
+  ["Okinawa",            26.340,  127.800],
+  ["Hawai\u02BBi",         19.600, -155.500],
+  ["Cape Verde",         15.120,  -23.610],
+  ["Guam",               13.440,  144.790],
+  ["Socotra",            12.470,   53.820],
+  ["Palau",               7.510,  134.580],
+  ["Maldives",            3.200,   73.220],
+  ["S\u00E3o Tom\u00E9",         0.250,    6.610],
+  ["Gal\u00E1pagos",        -0.620,  -90.350],
+  ["Seychelles",         -4.680,   55.490],
+  ["Ascension",          -7.950,  -14.360],
+  ["Marquesas",          -9.780, -139.060],
+  ["Christmas Island",  -10.490,  105.630],
+  ["Cocos Islands",     -12.130,   96.870],
+  ["St Helena",         -15.960,   -5.720],
+  ["Tahiti",            -17.650, -149.430],
+  ["Fiji",              -17.710,  178.070],
+  ["Mauritius",         -20.350,   57.550],
+  ["New Caledonia",     -21.300,  165.500],
+  ["Pitcairn",          -25.070, -130.100],
+  ["Easter Island",     -27.110, -109.350],
+  ["Tristan da Cunha",  -37.110,  -12.290],
+  ["Kerguelen",         -49.350,   70.220],
+  ["Falklands",         -51.750,  -59.000],
+  ["South Georgia",     -54.430,  -36.590]
+];
+
+// ---------------------------------------------------------------- shaders
+
+// toFixed because GLSL will not convert an int literal into a const float —
+// without the decimal point the shader fails to compile.
+const COMMON_GLSL = `
+  const float SPAN = ${SPAN.toFixed(1)};
+  const float DEPTH_MAX = ${DEPTH_MAX.toFixed(1)};
+  const float ELEV_TOP = ${ELEV_TOP.toFixed(1)};
+  const float EARTH_R = ${EARTH_R.toFixed(1)};
+
+  uniform sampler2D uHeight;
+  uniform float uMorph;   // 0 = real Earth, 1 = fully inverted
+  uniform float uExag;
+  uniform float uGamma;
+
+  // 12 bits, split linearly across R (high 8) and G (low 4, shifted up). The
+  // split is linear, so bilinear filtering of the two channels yields the same
+  // value as interpolating the height itself.
+  float decodeHeight(vec3 t) {
+    return (t.r * 4080.0 + t.g * 15.9375) / 4095.0 * SPAN - DEPTH_MAX;
+  }
+
+  // Most of the sea floor is a 4-6 km abyssal plain, so a straight linear
+  // exaggeration turns the inverted globe into one smooth bulge with the
+  // trenches barely poking out. Raising the normalised height to a power
+  // flattens the plains and lets the extremes tower — uGamma = 1 is the honest
+  // linear mapping, higher values trade accuracy for readable mountains.
+  // Each side is normalised against its own maximum so the curve is symmetric.
+  float shape(float h) {
+    float top = h < 0.0 ? DEPTH_MAX : ELEV_TOP;
+    float t = pow(clamp(abs(h) / top, 0.0, 1.0), uGamma) * top;
+    return h < 0.0 ? -t : t;
+  }
+
+  // Sample, shape, then mirror around zero: mix(h, -h, m) == h * (1 - 2m).
+  float shownHeight(vec2 uv) {
+    return shape(decodeHeight(texture2D(uHeight, uv).rgb)) * (1.0 - 2.0 * uMorph);
+  }
+`;
+
+const TERRAIN_VERT = `
+  precision highp float;
+  ${COMMON_GLSL}
+
+  varying vec2 vUv;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+
+  void main() {
+    vUv = uv;
+    // texture2D rather than texture2DLod: the Lod variant is missing from the
+    // vertex stage in some GLSL ES 1.00 implementations, and with mipmaps off
+    // level 0 is all there is anyway.
+    float shown = shownHeight(uv);
+
+    vec3 n = normalize(position);
+    vec3 p = n * (1.0 + shown / EARTH_R * uExag);
+
+    vNormalW = normalize(mat3(modelMatrix) * n);
+    vec4 world = modelMatrix * vec4(p, 1.0);
+    vPosW = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+const TERRAIN_FRAG = `
+  precision highp float;
+  ${COMMON_GLSL}
+
+  uniform vec2 uTexel;
+  uniform vec3 uSun;
+  uniform vec3 uCam;
+
+  varying vec2 vUv;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+
+  // slope is the true terrain gradient, dimensionless and free of the vertical
+  // exaggeration — a 1000 m rise across one 20 km cell is 0.05.
+  vec3 landColor(float h, float absLat, float slope) {
+    vec3 c = mix(vec3(0.15, 0.32, 0.14), vec3(0.35, 0.44, 0.19), smoothstep(0.0, 500.0, h));
+    c = mix(c, vec3(0.51, 0.42, 0.23), smoothstep(400.0, 1600.0, h));
+    c = mix(c, vec3(0.46, 0.34, 0.26), smoothstep(1500.0, 3000.0, h));
+    c = mix(c, vec3(0.54, 0.51, 0.48), smoothstep(2800.0, 4300.0, h));
+    // The snow line drops towards the poles, otherwise Greenland and Antarctica
+    // come out green on the real Earth.
+    float snow = mix(4600.0, 150.0, smoothstep(40.0, 72.0, absLat));
+    // Snow does not hold on a steep face. Inverted, the abyssal plains sit at
+    // 4-6 km and everything above the snow line goes white, so without this the
+    // new continents are a featureless sheet; with it, the rock shows through
+    // wherever the ground pitches and the relief becomes readable again.
+    float held = smoothstep(snow, snow + 600.0, h) * (1.0 - smoothstep(0.020, 0.075, slope));
+    return mix(c, vec3(0.93, 0.94, 0.96), held);
+  }
+
+  vec3 seaColor(float depth) {
+    vec3 c = mix(vec3(0.24, 0.60, 0.64), vec3(0.10, 0.36, 0.58), smoothstep(0.0, 300.0, depth));
+    c = mix(c, vec3(0.05, 0.18, 0.44), smoothstep(300.0, 2500.0, depth));
+    c = mix(c, vec3(0.02, 0.08, 0.26), smoothstep(2500.0, 6000.0, depth));
+    return mix(c, vec3(0.02, 0.04, 0.15), smoothstep(6000.0, 10500.0, depth));
+  }
+
+  void main() {
+    float h = shownHeight(vUv);
+    vec3 n = normalize(vNormalW);
+
+    // Normal from four neighbours. Spacing in metres depends on latitude,
+    // otherwise the poles get wildly overdrawn.
+    vec2 e = uTexel * 2.0;
+    float hL = shownHeight(vUv - vec2(e.x, 0.0));
+    float hR = shownHeight(vUv + vec2(e.x, 0.0));
+    float hD = shownHeight(vUv - vec2(0.0, e.y));
+    float hU = shownHeight(vUv + vec2(0.0, e.y));
+
+    float cosLat = clamp(length(n.xz), 0.06, 1.0);
+    vec3 east  = normalize(cross(vec3(0.0, 1.0, 0.0), n));
+    vec3 north = cross(n, east);
+    float dsEast  = 2.0 * e.x * 6.2831853 * EARTH_R * cosLat;
+    float dsNorth = 2.0 * e.y * 3.1415927 * EARTH_R;
+    float gEast = (hR - hL) / dsEast;
+    float gNorth = (hU - hD) / dsNorth;
+    vec3 N = normalize(n - east * (gEast * uExag) - north * (gNorth * uExag));
+    float slope = sqrt(gEast * gEast + gNorth * gNorth);
+
+    // The ramp is read off the height in metres, with no rescaling between the
+    // real and the inverted globe. That is the point: an abyssal plain 4-6 km
+    // down really does become 4-6 km up, which is above the snow line, so the
+    // inverted world is a snowfield with the old continents as its seas.
+    float absLat = abs(degrees(asin(clamp(n.y, -1.0, 1.0))));
+    vec3 base = mix(seaColor(-h), landColor(h, absLat, slope), smoothstep(-40.0, 40.0, h));
+
+    vec3 V = normalize(uCam - vPosW);
+    float lambert = max(dot(N, uSun), 0.0);
+    // Soft terminator, otherwise the day-night edge cuts a hard line through
+    // the relief.
+    float shade = 0.20 + 1.05 * lambert * smoothstep(-0.12, 0.18, dot(n, uSun));
+    vec3 col = base * shade;
+
+    // Slopes facing away from the sun get an extra bite of shadow — this is
+    // what makes the trenches read as mountains rather than as a bulge.
+    col *= mix(0.72, 1.0, smoothstep(-0.25, 0.45, dot(N, uSun)));
+
+    if (h < 0.0) {
+      vec3 H = normalize(uSun + V);
+      col += vec3(0.55, 0.68, 0.80) * pow(max(dot(N, H), 0.0), 60.0) * 0.35 * lambert;
+    }
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+    col += vec3(0.16, 0.26, 0.42) * rim * lambert;
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+const SHELL_VERT = `
+  precision highp float;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+  void main() {
+    vNormalW = normalize(mat3(modelMatrix) * normal);
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vPosW = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+const WATER_FRAG = `
+  precision highp float;
+  uniform vec3 uSun;
+  uniform vec3 uCam;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+  void main() {
+    vec3 N = normalize(vNormalW);
+    vec3 V = normalize(uCam - vPosW);
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+    float lambert = max(dot(N, uSun), 0.0);
+
+    vec3 col = mix(vec3(0.04, 0.16, 0.34), vec3(0.34, 0.66, 0.86), fres);
+    vec3 H = normalize(uSun + V);
+    col += vec3(1.0, 0.97, 0.9) * pow(max(dot(N, H), 0.0), 110.0) * 0.7;
+    col *= 0.30 + 0.85 * lambert;
+
+    gl_FragColor = vec4(col, (0.26 + 0.42 * fres) * (0.35 + 0.65 * lambert));
+  }
+`;
+
+const GLOW_FRAG = `
+  precision highp float;
+  uniform vec3 uSun;
+  uniform vec3 uCam;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+  void main() {
+    // Rendered from the inside (BackSide), so the normal points away from us.
+    vec3 N = normalize(vNormalW);
+    vec3 V = normalize(uCam - vPosW);
+    float edge = pow(clamp(1.0 - abs(dot(N, V)), 0.0, 1.0), 3.4);
+    float lit = max(dot(N, uSun), 0.0);
+    gl_FragColor = vec4(vec3(0.34, 0.56, 0.95) * edge * (0.05 + lit), 1.0);
+  }
+`;
+
+// ---------------------------------------------------------------- scene
+
+const app = document.getElementById("app");
+const loading = document.getElementById("loading");
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+app.insertBefore(renderer.domElement, app.firstChild);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 1, 0.005, 400);
+camera.position.set(1.25, 0.9, 2.85);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.rotateSpeed = 0.45;
+controls.zoomSpeed = 0.8;
+controls.enablePan = false;
+controls.minDistance = 1.25;
+controls.maxDistance = 9.0;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.45;
+
+// The sun trails the camera by 38 degrees of longitude and sits a little to the
+// north. A fixed sun would be prettier as an image, but half the planet would
+// then be unusable — rotate to the Pacific and you get an unlit disc.
+const SUN = new THREE.Vector3(0.72, 0.34, 0.60).normalize();
+const SUN_LAG = Math.PI * 38 / 180;
+
+function updateSun() {
+  const c = camera.position;
+  const horizontal = Math.hypot(c.x, c.z);
+  const angle = Math.atan2(c.z, c.x) + SUN_LAG;
+  SUN.set(Math.cos(angle) * horizontal, c.y + 0.42 * camera.position.length(), Math.sin(angle) * horizontal)
+     .normalize();
+}
+
+const shared = {
+  uHeight: { value: null },
+  uMorph:  { value: 1.0 },
+  uExag:   { value: 45.0 },
+  uGamma:  { value: 1.0 },
+  uTexel:  { value: new THREE.Vector2(1 / TEX_W, 1 / TEX_H) },
+  uSun:    { value: SUN },
+  uCam:    { value: new THREE.Vector3() }
+};
+
+scene.add(makeStars());
+
+const globe = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 512, 256),
+  new THREE.ShaderMaterial({ uniforms: shared, vertexShader: TERRAIN_VERT, fragmentShader: TERRAIN_FRAG })
+);
+globe.frustumCulled = false; // displaced in the shader, the bounding sphere lies
+scene.add(globe);
+
+// Same tessellation as the terrain on purpose. The terrain is this exact sphere
+// displaced radially per vertex, so a matching shell can never poke through it.
+// At a coarser resolution its flat facets sag further inwards than the shaped
+// lowlands rise, and the sea floor breaks through in a pattern of blobs.
+const waterMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 512, 256),
+  new THREE.ShaderMaterial({
+    uniforms: shared,
+    vertexShader: SHELL_VERT,
+    fragmentShader: WATER_FRAG,
+    transparent: true,
+    depthWrite: false
+  })
+);
+waterMesh.renderOrder = 1;
+scene.add(waterMesh);
+
+const glow = new THREE.Mesh(
+  new THREE.SphereGeometry(1.03, 64, 32),
+  new THREE.ShaderMaterial({
+    uniforms: shared,
+    vertexShader: SHELL_VERT,
+    fragmentShader: GLOW_FRAG,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthWrite: false
+  })
+);
+glow.renderOrder = 2;
+scene.add(glow);
+
+// ---------------------------------------------------------------- cities
+
+// Direction vectors follow THREE.SphereGeometry's UV convention exactly:
+// u = 0 is longitude -180° on the -X axis, Greenwich on +X.
+function latLonToDir(lat, lon) {
+  const theta = (90 - lat) * Math.PI / 180;
+  const phi = ((lon + 180) / 360) * Math.PI * 2;
+  return new THREE.Vector3(
+    -Math.cos(phi) * Math.sin(theta),
+    Math.cos(theta),
+    Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+const labelLayer = document.getElementById("labels");
+
+// One group per kind: markers and stalks are single buffers rewritten every
+// frame, so a group is the natural unit to switch on and off.
+function makeGroup(list, cssClass, dotColor, stalkColor) {
+  const places = list.map(([name, lat, lon]) => {
+    const el = document.createElement("div");
+    el.className = cssClass;
+    el.textContent = name;
+    labelLayer.appendChild(el);
+    return { name, lat, lon, dir: latLonToDir(lat, lon), height: 0, el, pos: new THREE.Vector3() };
+  });
+
+  const markerGeo = new THREE.BufferGeometry();
+  markerGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(places.length * 3), 3));
+  const markers = new THREE.Points(markerGeo, new THREE.PointsMaterial({
+    size: 7, sizeAttenuation: false, map: dotTexture(),
+    transparent: true, depthTest: true, depthWrite: false, color: dotColor
+  }));
+  markers.frustumCulled = false;
+  markers.renderOrder = 3;
+  scene.add(markers);
+
+  // A stalk ties each place to sea level. Without it a drowned city vanishes
+  // into the dark of the new basins, and an island sunk into a 10 km pit is
+  // impossible to spot at all.
+  const stalkGeo = new THREE.BufferGeometry();
+  stalkGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(places.length * 6), 3));
+  const stalks = new THREE.LineSegments(stalkGeo, new THREE.LineBasicMaterial({
+    color: stalkColor, transparent: true, opacity: 0.5, depthWrite: false
+  }));
+  stalks.frustumCulled = false;
+  stalks.renderOrder = 3;
+  scene.add(stalks);
+
+  return { places, markerGeo, stalkGeo, markers, stalks, cssClass, visible: true };
+}
+
+const cityGroup = makeGroup(CITIES, "city", 0xfff0c8, 0xffd98a);
+const islandGroup = makeGroup(ISLANDS, "island", 0xc6ffe0, 0x8fe8bd);
+const groups = [cityGroup, islandGroup];
+
+function dotTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const ctx = c.getContext("2d");
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0.0, "rgba(255,255,255,1)");
+  g.addColorStop(0.35, "rgba(255,238,200,0.95)");
+  g.addColorStop(1.0, "rgba(255,200,120,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.needsUpdate = true;
+  return t;
+}
+
+function makeStars() {
+  const n = 2600, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+    const r = 120 + Math.random() * 60;
+    pos.set([Math.cos(a) * s * r, u * r, Math.sin(a) * s * r], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({
+    size: 1.15, sizeAttenuation: false, color: 0x9fb4d6, transparent: true, opacity: 0.75
+  }));
+}
+
+// ---------------------------------------------------------------- height lookup
+
+// The same texture again on a 2D canvas, so markers sit at exactly the height
+// the shader displaces their pixel to.
+let sampleData = null;
+
+function readHeights(img) {
+  const c = document.createElement("canvas");
+  c.width = TEX_W;
+  c.height = TEX_H;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, TEX_W, TEX_H);
+  try {
+    sampleData = ctx.getImageData(0, 0, TEX_W, TEX_H).data;
+  } catch (err) {
+    // Reading back the canvas is blocked under file:// with a separate image
+    // file. Markers then sit at sea level, which beats a dead globe.
+    console.warn("height sampling unavailable (canvas tainted):", err.message);
+    return;
+  }
+  for (const g of groups)
+    for (const place of g.places) place.height = rawHeightAt(place.lat, place.lon);
+}
+
+function texel(ix, iy) {
+  const i = (iy * TEX_W + (((ix % TEX_W) + TEX_W) % TEX_W)) * 4;
+  return (sampleData[i] * 16 + sampleData[i + 1] / 16) / 4095 * SPAN - DEPTH_MAX;
+}
+
+function rawHeightAt(lat, lon) {
+  if (!sampleData) return 0;
+  const x = ((lon + 180) / 360) * TEX_W - 0.5;
+  const y = ((90 - lat) / 180) * TEX_H - 0.5;
+  const x0 = Math.floor(x);
+  const y0 = Math.min(Math.max(Math.floor(y), 0), TEX_H - 2);
+  const fx = x - x0, fy = y - y0;
+  const a = texel(x0, y0), b = texel(x0 + 1, y0);
+  const c = texel(x0, y0 + 1), d = texel(x0 + 1, y0 + 1);
+  return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+}
+
+// Mirror of shape() in COMMON_GLSL — keep the two in step.
+function shape(h, gamma) {
+  const top = h < 0 ? DEPTH_MAX : ELEV_TOP;
+  const t = Math.pow(Math.min(Math.abs(h) / top, 1), gamma) * top;
+  return h < 0 ? -t : t;
+}
+
+// ---------------------------------------------------------------- controls
+
+const ui = {
+  morph: document.getElementById("morph"),
+  exag: document.getElementById("exag"),
+  gamma: document.getElementById("gamma"),
+  spin: document.getElementById("spin"),
+  water: document.getElementById("water"),
+  cities: document.getElementById("cities"),
+  islands: document.getElementById("islands"),
+  vMorph: document.getElementById("vMorph"),
+  vExag: document.getElementById("vExag"),
+  vGamma: document.getElementById("vGamma"),
+  pNormal: document.getElementById("pNormal"),
+  pInvert: document.getElementById("pInvert"),
+  legendText: document.getElementById("legendText"),
+  legWater: document.getElementById("legWater"),
+  legLand: document.getElementById("legLand"),
+  extremes: document.getElementById("extremes")
+};
+
+function syncUI() {
+  const m = shared.uMorph.value;
+  ui.vMorph.textContent = Math.round(m * 100) + "%";
+  ui.vExag.textContent = Math.round(shared.uExag.value) + "×";
+  ui.vGamma.textContent = shared.uGamma.value.toFixed(2).replace(/0$/, "");
+  ui.pNormal.classList.toggle("on", m < 0.02);
+  ui.pInvert.classList.toggle("on", m > 0.98);
+
+  const inverted = m > 0.5;
+  ui.legendText.textContent = Math.abs(m - 0.5) < 0.03
+    ? "Halfway: every height cancels out and the planet is a smooth ocean."
+    : inverted
+      ? "Colours are inverted too: what used to be sea floor now wears land colours."
+      : "The real Earth. Drag the slider to the right.";
+  ui.legWater.textContent = inverted ? "Water over the old continents" : "Ocean";
+  ui.legLand.textContent = inverted ? "Land on the old sea floor" : "Land";
+  ui.extremes.innerHTML = (inverted
+    ? "Highest peak: <b>" + DEEPEST + "</b><br>Deepest point: <b>" + HIGHEST + "</b>"
+    : "Deepest point: <b>" + DEEPEST + "</b><br>Highest peak: <b>" + HIGHEST + "</b>")
+    + "<br><span style='opacity:.7'>The NASA topography saturates at 6.4 km, so the "
+    + "Himalaya renders lower than its real 8,848 m.</span>";
+}
+
+let morphTarget = 1.0;
+ui.morph.addEventListener("input", () => { morphTarget = ui.morph.value / 100; });
+ui.exag.addEventListener("input", () => { shared.uExag.value = +ui.exag.value; syncUI(); });
+ui.gamma.addEventListener("input", () => { shared.uGamma.value = ui.gamma.value / 100; syncUI(); });
+ui.spin.addEventListener("change", () => { controls.autoRotate = ui.spin.checked; });
+ui.water.addEventListener("change", () => { waterMesh.visible = ui.water.checked; });
+function setGroupVisible(group, on) {
+  group.visible = on;
+  group.markers.visible = group.stalks.visible = on;
+  if (!on) for (const place of group.places) place.el.style.display = "none";
+}
+ui.cities.addEventListener("change", () => setGroupVisible(cityGroup, ui.cities.checked));
+ui.islands.addEventListener("change", () => setGroupVisible(islandGroup, ui.islands.checked));
+ui.pNormal.addEventListener("click", () => { morphTarget = 0; ui.morph.value = 0; });
+ui.pInvert.addEventListener("click", () => { morphTarget = 1; ui.morph.value = 100; });
+
+function resize() {
+  const w = app.clientWidth, h = app.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+// ---------------------------------------------------------------- loop
+
+const ndc = new THREE.Vector3();
+const placed = [];
+
+function updateLabels() {
+  const w = app.clientWidth, h = app.clientHeight;
+  const camDist = camera.position.length();
+  const camDir = camera.position.clone().normalize();
+  const horizon = 1 / camDist; // everything in front of the sphere's horizon
+
+  const exag = shared.uExag.value;
+  const gamma = shared.uGamma.value;
+  const flip = 1 - 2 * shared.uMorph.value;
+
+  const visible = [];
+  for (const group of groups) {
+    if (!group.visible) continue;
+    const mPos = group.markerGeo.attributes.position.array;
+    const sPos = group.stalkGeo.attributes.position.array;
+
+    for (let i = 0; i < group.places.length; i++) {
+      const c = group.places[i];
+      const shown = shape(c.height, gamma) * flip;
+      const r = 1 + (shown / EARTH_R) * exag;
+      c.pos.copy(c.dir).multiplyScalar(r);
+      mPos[i * 3] = c.pos.x; mPos[i * 3 + 1] = c.pos.y; mPos[i * 3 + 2] = c.pos.z;
+
+      // Stalk up to just above sea level; on dry land it is a short stub.
+      const top = Math.max(r, 1.0) + 0.006;
+      sPos[i * 6] = c.pos.x; sPos[i * 6 + 1] = c.pos.y; sPos[i * 6 + 2] = c.pos.z;
+      sPos[i * 6 + 3] = c.dir.x * top; sPos[i * 6 + 4] = c.dir.y * top; sPos[i * 6 + 5] = c.dir.z * top;
+
+      if (c.dir.dot(camDir) <= horizon + 0.02) { c.el.style.display = "none"; continue; }
+
+      ndc.copy(c.dir).multiplyScalar(top).project(camera);
+      visible.push({
+        c,
+        cssClass: group.cssClass,
+        x: (ndc.x * 0.5 + 0.5) * w,
+        y: (-ndc.y * 0.5 + 0.5) * h - 13,
+        depth: ndc.z,
+        wet: shown < 0
+      });
+    }
+    group.markerGeo.attributes.position.needsUpdate = true;
+    group.stalkGeo.attributes.position.needsUpdate = true;
+  }
+
+  // Nearest first, then drop whatever overlaps — otherwise Europe is mush.
+  visible.sort((a, b) => a.depth - b.depth);
+  placed.length = 0;
+  for (const v of visible) {
+    const halfW = v.c.el.offsetWidth / 2 || 30;
+    let clash = false;
+    for (const p of placed) {
+      if (Math.abs(v.x - p.x) < halfW + p.halfW + 4 && Math.abs(v.y - p.y) < 17) { clash = true; break; }
+    }
+    if (clash) { v.c.el.style.display = "none"; continue; }
+    placed.push({ x: v.x, y: v.y, halfW });
+    v.c.el.style.display = "";
+    v.c.el.className = v.cssClass + " " + (v.wet ? "wet" : "dry");
+    v.c.el.style.transform = `translate(-50%,-50%) translate(${v.x.toFixed(1)}px,${v.y.toFixed(1)}px)`;
+  }
+}
+
+function frame() {
+  requestAnimationFrame(frame);
+
+  const m = shared.uMorph.value;
+  if (Math.abs(morphTarget - m) > 0.0005) {
+    shared.uMorph.value = m + (morphTarget - m) * 0.12;
+    ui.morph.value = Math.round(shared.uMorph.value * 100);
+    syncUI();
+  } else if (m !== morphTarget) {
+    shared.uMorph.value = morphTarget;
+    syncUI();
+  }
+
+  controls.update();
+  updateSun();
+  shared.uCam.value.copy(camera.position);
+  updateLabels();
+  renderer.render(scene, camera);
+}
+
+// ---------------------------------------------------------------- start
+
+const img = new Image();
+img.crossOrigin = "anonymous";
+img.onload = () => {
+  const tex = new THREE.Texture(img);
+  tex.wrapS = THREE.RepeatWrapping;      // longitude wraps around
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.minFilter = THREE.LinearFilter;    // no mipmaps: this is data, not an image
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  shared.uHeight.value = tex;
+
+  readHeights(img);
+  resize();
+  syncUI();
+  frame();
+  loading.classList.add("done");
+};
+img.onerror = () => {
+  loading.innerHTML = "<div>Could not load the elevation map.<br>" +
+    "Serve the folder over HTTP: <code>python3 -m http.server</code></div>";
+};
+img.src = HEIGHTMAP_URL;
+</script>
