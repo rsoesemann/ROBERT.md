@@ -105,6 +105,21 @@ python3 bundle.py             # -> dist/inverted-earth.html, ~2.7 MB
 For a public link, GitHub Pages serves this directory as-is — no bundling
 needed, since `index.html` only references files next to it.
 
+### Link previews
+
+`preview.png` is what LinkedIn, Slack and the rest show when the page URL is
+shared. None of them run JavaScript, so the globe has to be handed over as a
+finished image; the Open Graph tags in `index.html` point at it by absolute URL.
+
+```bash
+npx playwright install chromium
+node make_preview.js          # -> preview.png, 1200x627
+```
+
+If the URL was shared before the tags existed, the unfurler has cached the
+result — LinkedIn keeps it for about a week. Force a re-scrape at
+<https://www.linkedin.com/post-inspector/>.
+
 ## How it works
 
 - `THREE.SphereGeometry(1, 512, 256)` displaced radially in the vertex shader by

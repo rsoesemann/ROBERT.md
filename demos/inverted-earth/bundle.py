@@ -20,8 +20,23 @@ SCRIPTS = ["vendor/three.min.js", "vendor/OrbitControls.js"]
 HEIGHTMAP = "heightmap.webp"
 
 
+def strip_skeleton(html: str) -> str:
+    """Drop the document skeleton, keeping the head contents inline.
+
+    index.html carries a real <head> so that link-preview crawlers do not have
+    to rely on implicit-head parsing. A published artifact supplies its own
+    skeleton, so those tags must not travel with the bundle.
+    """
+    for marker in ("<!DOCTYPE html>", "<html lang=\"en\">", "<head>", "</head>",
+                   "<body>", "</body>", "</html>"):
+        if marker not in html:
+            sys.exit(f"{marker} missing from index.html — bundle.py is out of date")
+        html = html.replace(marker, "", 1)
+    return html.strip() + "\n"
+
+
 def main() -> int:
-    html = (HERE / "index.html").read_text(encoding="utf-8")
+    html = strip_skeleton((HERE / "index.html").read_text(encoding="utf-8"))
 
     for rel in SCRIPTS:
         path = HERE / rel

@@ -1,6 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Inverted Earth</title>
+<meta name="description" content="The planet's topography turned inside out. The Mariana Trench becomes the highest mountain on Earth, the continents become seas, and every island becomes a crater. Real NASA elevation data, no exaggeration.">
+
+<!-- Link previews. LinkedIn, Slack and the rest never run the WebGL globe —
+     they read these tags and download preview.png, so the image has to be a
+     pre-rendered file and og:image has to be an absolute URL. The explicit
+     width and height are what make LinkedIn choose the large card layout. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rsoesemann.github.io/ROBERT.md/demos/inverted-earth/">
+<meta property="og:title" content="Inverted Earth — the Mariana Trench as the world's highest mountain">
+<meta property="og:description" content="The planet's topography turned inside out. The Mariana Trench becomes the highest mountain on Earth, the continents become seas, and every island becomes a crater. Real NASA elevation data, no exaggeration.">
+<meta property="og:image" content="https://rsoesemann.github.io/ROBERT.md/demos/inverted-earth/preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Two globes side by side: the real Earth, and the same planet with its heights inverted into a snow-covered world.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Inverted Earth">
+<meta name="twitter:description" content="The planet's topography turned inside out. The Mariana Trench becomes the highest mountain on Earth, the continents become seas, and every island becomes a crater. Real NASA elevation data, no exaggeration.">
+<meta name="twitter:image" content="https://rsoesemann.github.io/ROBERT.md/demos/inverted-earth/preview.png">
+
+<link rel="canonical" href="https://rsoesemann.github.io/ROBERT.md/demos/inverted-earth/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;%3E%3Ctext y=&#39;26&#39; font-size=&#39;26&#39;%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
 
 <style>
   :root {
@@ -206,7 +231,9 @@
     #hint { display: none; }
   }
 </style>
+</head>
 
+<body>
 <div id="app">
   <div id="labels"></div>
 
@@ -966,3 +993,5 @@ img.onerror = () => {
 };
 img.src = HEIGHTMAP_URL;
 </script>
+</body>
+</html>
