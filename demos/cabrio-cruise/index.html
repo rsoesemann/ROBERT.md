@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cabrio Cruise</title>
+<meta name="description" content="Ein 3D-Fahrspiel im Browser: BMW-Cabrio, offenes Verdeck, Schwarzwald-Landstraße, Autobahn, Speditionshof — und Polizei, wenn man es übertreibt.">
+
+<!-- Link previews. Nothing that unfurls a URL runs WebGL, so the card image
+     has to be a pre-rendered file and og:image an absolute URL. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rsoesemann.github.io/ROBERT.md/demos/cabrio-cruise/">
+<meta property="og:title" content="Cabrio Cruise — offenes Verdeck, Landstraße, Autobahn">
+<meta property="og:description" content="Ein 3D-Fahrspiel im Browser: BMW-Cabrio, offenes Verdeck, Schwarzwald-Landstraße, Autobahn, Speditionshof — und Polizei, wenn man es übertreibt.">
+<meta property="og:image" content="https://rsoesemann.github.io/ROBERT.md/demos/cabrio-cruise/preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Blick aus dem Cockpit eines offenen BMW-Cabrios über die Windschutzscheibe auf eine Landstraße.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cabrio Cruise">
+<meta name="twitter:description" content="Ein 3D-Fahrspiel im Browser: BMW-Cabrio, offenes Verdeck, Landstraße, Autobahn, Speditionshof.">
+<meta name="twitter:image" content="https://rsoesemann.github.io/ROBERT.md/demos/cabrio-cruise/preview.png">
+
+<link rel="canonical" href="https://rsoesemann.github.io/ROBERT.md/demos/cabrio-cruise/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;%3E%3Ctext y=&#39;26&#39; font-size=&#39;26&#39;%3E%F0%9F%9A%97%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root {
+    --ink: #eef3f8;
+    --dim: #8e9bb0;
+    --panel: rgba(10, 15, 24, 0.78);
+    --edge: rgba(150, 175, 210, 0.24);
+    --accent: #ff6a3d;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* Safari fails to initialise document scrolling in published artifacts on
+     first paint, so the document never scrolls here — only inner containers. */
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+    margin: 0;
+    background: #0a0d14;
+    color: var(--ink);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  #app { position: relative; height: 100%; overflow: hidden; }
+  canvas { display: block; }
+  #app > canvas:first-child { width: 100%; height: 100%; touch-action: none; }
+
+  .hud { position: absolute; pointer-events: none; }
+
+  #stats {
+    top: 14px; left: 14px;
+    padding: 10px 14px 11px;
+    border-radius: 13px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    min-width: 186px;
+  }
+  #cash { font-size: 21px; font-weight: 650; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; }
+  .stars { font-size: 15px; letter-spacing: 2px; color: #46506080; margin-top: 1px; }
+  .stars.on { color: #ffc733; text-shadow: 0 0 10px rgba(255, 199, 51, 0.55); }
+  #mission { font-size: 11.5px; color: var(--dim); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  #damage-track {
+    margin-top: 7px; height: 4px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.12); overflow: hidden;
+  }
+  #damage-bar {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, #4a9e5f, #d8b134 55%, #d2402c);
+    transition: width 0.25s;
+  }
+
+  #speedo { bottom: 16px; right: 16px; width: 168px; height: 168px; }
+  #minimap { bottom: 16px; left: 16px; width: 160px; height: 160px; }
+
+  #msg {
+    top: 22%; left: 50%;
+    transform: translateX(-50%);
+    font-size: 26px; font-weight: 650;
+    letter-spacing: 0.01em;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
+    opacity: 0;
+    transition: opacity 0.35s;
+    white-space: nowrap;
+  }
+
+  #hint {
+    bottom: 14px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 11.5px; color: var(--dim);
+    background: rgba(6, 10, 18, 0.6);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 4px 13px;
+  }
+  #hint b { color: var(--ink); font-weight: 600; }
+
+  /* Touch pads. Hidden on anything with a real keyboard. */
+  #pads { position: absolute; inset: 0; display: none; }
+  @media (pointer: coarse) { #pads { display: block; } #hint { display: none; } }
+  .pad {
+    position: absolute; bottom: 22px;
+    width: 74px; height: 74px;
+    border-radius: 50%;
+    background: rgba(12, 18, 28, 0.55);
+    border: 1px solid var(--edge);
+    color: var(--ink);
+    font-size: 24px;
+    display: grid; place-items: center;
+    touch-action: none;
+  }
+  #t-left { left: 20px; } #t-right { left: 104px; }
+  #t-brake { right: 104px; } #t-gas { right: 20px; background: rgba(255, 106, 61, 0.28); }
+
+  #start {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    background: radial-gradient(120% 90% at 50% 0%, rgba(20, 44, 84, 0.75), rgba(6, 9, 15, 0.92));
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 5;
+  }
+  #card {
+    width: min(520px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px 26px 22px;
+    border-radius: 18px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+  }
+  #card h1 { margin: 0 0 4px; font-size: 25px; letter-spacing: -0.01em; }
+  #card .sub { margin: 0 0 18px; color: var(--dim); font-size: 13px; }
+  #card h2 {
+    margin: 18px 0 8px; font-size: 11px; font-weight: 650;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim);
+  }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 7px 13px; font-size: 12.5px; align-items: baseline; }
+  .keys div { display: flex; gap: 4px; }
+  .keys kbd {
+    font: inherit; font-size: 11px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid var(--edge);
+    border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 6px;
+    white-space: nowrap;
+  }
+  .keys span { color: var(--dim); }
+  .paints { display: flex; gap: 8px; flex-wrap: wrap; }
+  .paints button {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 11px 6px 8px;
+    font: inherit; font-size: 12px; color: var(--ink);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--edge);
+    border-radius: 9px; cursor: pointer;
+  }
+  .paints button i {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+  }
+  .paints button.on { border-color: var(--accent); background: rgba(255, 106, 61, 0.16); }
+  #go {
+    margin-top: 20px; width: 100%;
+    padding: 12px; font: inherit; font-size: 15px; font-weight: 650;
+    color: #10151d; background: var(--accent);
+    border: 0; border-radius: 11px; cursor: pointer;
+  }
+  #go:hover { filter: brightness(1.08); }
+
+  /* On a phone the three HUD corners collide at full size. Last in the sheet
+     so it wins over the plain rules above. */
+  @media (max-width: 720px), (max-height: 460px) {
+    #speedo { width: 112px; height: 112px; bottom: 10px; right: 10px; }
+    #minimap { width: 104px; height: 104px; bottom: 10px; left: 10px; }
+    #stats { top: 10px; left: 10px; padding: 7px 11px 8px; min-width: 138px; }
+    #cash { font-size: 16px; }
+    .stars { font-size: 12px; }
+    #mission { font-size: 10px; }
+    #msg { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stats" class="hud">
+    <div id="cash">0 €</div>
+    <div id="stars" class="stars">☆☆☆☆☆</div>
+    <div id="mission">Lieferung 1</div>
+    <div id="damage-track"><div id="damage-bar"></div></div>
+  </div>
+
+  <canvas id="speedo" class="hud" width="168" height="168"></canvas>
+  <canvas id="minimap" class="hud" width="160" height="160"></canvas>
+  <div id="msg" class="hud"></div>
+  <div id="hint" class="hud">
+    <b>W A S D</b> fahren · <b>Leertaste</b> Handbremse · <b>C</b> Kamera · <b>H</b> Hupe · <b>R</b> Radio · <b>T</b> zurück auf die Straße
+  </div>
+
+  <div id="pads">
+    <div class="pad" id="t-left">◀</div>
+    <div class="pad" id="t-right">▶</div>
+    <div class="pad" id="t-brake">▼</div>
+    <div class="pad" id="t-gas">▲</div>
+  </div>
+
+  <div id="start">
+    <div id="card">
+      <h1>Cabrio Cruise</h1>
+      <p class="sub">Offenes Verdeck, zwei Hüte, ein Rundkurs durch Felder, Wald,
+        einen Speditionshof und ein Stück Autobahn. Fahr die Lieferringe ab,
+        bevor die Zeit abläuft — und ramm nichts, sonst kommt die Streife.</p>
+
+      <h2>Lackierung</h2>
+      <div class="paints" id="paints"></div>
+
+      <h2>Steuerung</h2>
+      <div class="keys">
+        <div><kbd>W</kbd><kbd>S</kbd></div><span>Gas, bremsen und rückwärts</span>
+        <div><kbd>A</kbd><kbd>D</kbd></div><span>lenken (Pfeiltasten gehen auch)</span>
+        <div><kbd>Leertaste</kbd></div><span>Handbremse — damit driftet das Heck</span>
+        <div><kbd>C</kbd></div><span>Kamera: Cockpit, Verfolger, Fahrersicht, Kino</span>
+        <div><kbd>H</kbd><kbd>R</kbd><kbd>M</kbd></div><span>Hupe · Radio · Ton aus</span>
+        <div><kbd>P</kbd></div><span>Filmlook (Bloom, Korn, Bewegungsunschärfe) an/aus</span>
+        <div><kbd>T</kbd></div><span>zurück auf die Straße, wenn du im Feld stehst</span>
+      </div>
+
+      <button id="go">Los geht's</button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="src/post.js"></script>
+<script src="src/world.js"></script>
+<script src="src/car.js"></script>
+<script src="src/game.js"></script>
+<script>
+  CC.init();
+
+  // The title screen orbits the parked car, so a paint swap is visible at once.
+  let chosenPaint = localStorage.getItem('cc-paint') || 'Alpinweiß';
+  const paints = document.getElementById('paints');
+  for (const [name, hex] of Object.entries(CC.PAINTS)) {
+    const b = document.createElement('button');
+    b.innerHTML = '<i style="background:#' + hex.toString(16).padStart(6, '0') + '"></i>' + name;
+    if (name === chosenPaint) b.classList.add('on');
+    b.onclick = () => {
+      chosenPaint = name;
+      for (const o of paints.children) o.classList.toggle('on', o === b);
+      CC.setPaint(name);
+    };
+    paints.appendChild(b);
+  }
+
+  document.getElementById('go').onclick = () => {
+    document.getElementById('start').remove();
+    CC.start(chosenPaint);
+  };
+</script>
+</body>
+</html>
