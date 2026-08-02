@@ -448,23 +448,32 @@
     drv.group.rotation.z = lean;
     drv.group.position.y = jiggle;
     drv.head.rotation.z = lean * 0.6;
-    setArm(drv.arms[0], rimPoint(25));
-    setArm(drv.arms[1], rimPoint(155));
+    setArm(drv.arms[0], rimPoint(25), 0.4);
+    setArm(drv.arms[1], rimPoint(155), -0.4);
 
-    // Passenger: hands in her lap until it gets fast, then arms in the wind.
+    /* Passenger: hands in her lap until it gets fast, then arms in the wind.
+       `st.cheer` overrides the speed threshold when something worth reacting
+       to happens — a crash, a checkpoint, blue lights — and at the same time
+       widens and speeds up the waving, so the two cases read differently. */
     const pax = refs.people[1];
+    const cheer = st.cheer || 0;
     pax.group.rotation.z = lean * 1.4;
+    pax.group.rotation.y = -cheer * 0.30;      // twists round to look
     pax.group.position.y = jiggle * 1.3;
-    const up = T.MathUtils.clamp((kmh - 80) / 30, 0, 1);
+    pax.head.rotation.y = -cheer * 0.5;
+
+    const up = Math.max(T.MathUtils.clamp((kmh - 80) / 30, 0, 1), cheer);
+    const amp = 0.05 + cheer * 0.15;
+    const freq = 3.1 + cheer * 5.5;
     for (let i = 0; i < 2; i++) {
       const s = i ? -1 : 1;
       const rest = new T.Vector3(-0.42 + s * 0.20, 0.70, -0.16);
       const wind = new T.Vector3(
-        -0.42 + s * 0.21 + Math.sin(time * 3.1 + i) * 0.05,
-        1.78 + Math.sin(time * 4.3 + i * 1.7) * 0.08,
-        -0.44
+        -0.42 + s * 0.23 + Math.sin(time * freq + i) * amp,
+        1.58 + cheer * 0.10 + Math.sin(time * freq * 1.35 + i * 1.7) * (0.08 + cheer * 0.11),
+        -0.40
       );
-      setArm(pax.arms[i], rest.lerp(wind, up));
+      setArm(pax.arms[i], rest.lerp(wind, up), -s * 0.5);
     }
     if (pax.hair) {
       pax.hair.rotation.x = -Math.min(kmh / 130, 1) * 0.42 + Math.sin(time * 6) * 0.04;
@@ -472,8 +481,11 @@
     }
   };
 
-  function setArm(arm, target) {
+  /* `flare` pushes the elbow sideways, positive towards +X. Without it the two
+   segments line up and a raised arm renders as a single straight pole. */
+  function setArm(arm, target, flare) {
     const elbow = new T.Vector3().addVectors(arm.shoulder, target).multiplyScalar(0.5);
+    elbow.x += (flare || 0) * 0.22;
     elbow.y -= 0.07;
     elbow.z -= 0.05;
     aim(arm.upper, arm.shoulder, elbow);

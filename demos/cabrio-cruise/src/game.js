@@ -19,6 +19,7 @@
     pitch: 0, roll: 0, cam: 0,
     cash: 0, wanted: 0, damage: 0, topSpeed: 0,
     busted: 0, missionTime: 0, checkpoints: 0,
+    cheer: 0, glance: 0,
   };
   CC.st = st;
 
@@ -319,7 +320,16 @@
     }
   }
 
+  /* Something worth reacting to. Drives the passenger's arms, and makes the
+     driver glance across at her — in his own view she sits a full head-turn
+     to the right, so without the glance none of it is ever on screen. */
+  function excite(strength) {
+    st.cheer = Math.min(1, st.cheer + strength);
+    st.glance = Math.min(0.9, st.glance + strength * 0.95);
+  }
+
   function bump(force) {
+    excite(Math.min(1, 0.5 + force));
     shake.x += (Math.random() - 0.5) * force * 0.9;
     shake.y += (Math.random() - 0.5) * force * 0.7;
     st.damage = Math.min(100, st.damage + force * 6);
@@ -332,6 +342,7 @@
     if (st.wanted >= 5) return;
     st.wanted = Math.min(5, st.wanted + n);
     policeClear = 0;
+    excite(1);
     while (police.length < Math.min(st.wanted, 3)) {
       const p = CC.buildPolice();
       scene.add(p.group);
@@ -421,6 +432,7 @@
       const bonus = Math.round(Math.abs(st.speed) * 6);
       st.cash += 250 + bonus;
       st.checkpoints++;
+      excite(0.9);
       flash('Checkpoint  +' + (250 + bonus) + ' €');
       nextCheckpoint(false);
       return;
@@ -569,13 +581,27 @@
 
   function updateCamera(dt) {
     const rig = CAM_RIGS[st.cam];
-    // From the driver's own eye you would otherwise be looking at the inside
-    // of his skull.
-    refs.people[0].head.visible = st.cam !== 0;
-    if (camera.fov !== rig.fov) { camera.fov = rig.fov; camera.updateProjectionMatrix(); }
+    const L = T.MathUtils.lerp;
+
+    /* On a reaction the driver's view pulls back to the over-the-shoulder rig
+       for a beat. She sits a full 90° to his right, so a head turn large
+       enough to find her puts her face in the lens and loses the road; backing
+       off frames both of them and the road at once — which is the shot the
+       whole thing is modelled on anyway. */
+    const g = st.cam === 0 ? T.MathUtils.smoothstep(st.glance, 0, 1) : 0;
+    const alt = CAM_RIGS[1];
+
+    // From the driver's own eye you would be looking at the inside of his
+    // skull; once the camera has pulled back, his head has to come back.
+    refs.people[0].head.visible = st.cam !== 0 || g > 0.3;
+
+    const fov = L(rig.fov, alt.fov, g);
+    if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
     const m = cabrio.matrixWorld;
-    camPos.set(rig.pos[0], rig.pos[1], rig.pos[2]).applyMatrix4(m);
-    camAim.set(rig.aim[0], rig.aim[1], rig.aim[2]).applyMatrix4(m);
+    camPos.set(L(rig.pos[0], alt.pos[0], g), L(rig.pos[1], alt.pos[1], g),
+               L(rig.pos[2], alt.pos[2], g)).applyMatrix4(m);
+    camAim.set(L(rig.aim[0], alt.aim[0], g), L(rig.aim[1], alt.aim[1], g),
+               L(rig.aim[2], alt.aim[2], g)).applyMatrix4(m);
 
     const k = snapCam || rig.lag <= 0 ? 1 : 1 - Math.exp(-dt / rig.lag);
     snapCam = false;
@@ -735,6 +761,8 @@
     }
 
     grace = Math.max(0, grace - dt);
+    st.cheer = Math.max(0, st.cheer - dt / 3.6);
+    st.glance = Math.max(0, st.glance - dt / 1.8);
     drive(dt, readInput());
     updateTraffic(dt);
     const sirenNear = updatePolice(dt);

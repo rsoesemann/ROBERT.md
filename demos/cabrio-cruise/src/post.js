@@ -127,7 +127,7 @@
 
     const brightU = {
       tSrc: { value: rtScene.texture },
-      threshold: { value: 1.15 },
+      threshold: { value: 1.38 },
       softness: { value: 0.6 },
     };
     const blurU = { tSrc: { value: null }, dir: { value: new T.Vector2() } };

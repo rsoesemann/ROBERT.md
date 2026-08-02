@@ -38,6 +38,15 @@ Auf Touchgeräten erscheinen vier Pads statt der Tastenzeile.
 Goldene Ringe markieren die nächste Lieferung. Jeder Treffer bringt 250 € plus
 Tempobonus und stellt die Uhr neu; läuft die Zeit ab, kommt eine neue Lieferung.
 
+Bei allem, was passiert — Checkpoint getroffen, Unfall, Streifenwagen im
+Rückspiegel — reißt die Beifahrerin die Arme hoch und wedelt, dreht sich dabei
+zur Seite. Ab 80 km/h macht sie das ohnehin, aber langsamer und kleiner; die
+Reaktion ist doppelt so schnell und dreimal so weit ausholend. In der
+Fahrersicht sitzt sie 90° rechts und wäre nie im Bild, deshalb zieht die
+Kamera für anderthalb Sekunden auf die Cockpit-Position zurück und zeigt
+beide. Ein Kopfdrehen weit genug, um sie zu finden, würde die Straße
+verlieren.
+
 Wer Gegenverkehr rammt, bekommt einen Fahndungsstern. Ab dem ersten Stern
 hängen sich Streifenwagen an, die auf der Ideallinie schneller sind als der
 Verkehr. Bleiben sie 2,6 Sekunden am Stoßfänger, ist die Fahrt vorbei —
