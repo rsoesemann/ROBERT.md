@@ -49,7 +49,7 @@ Endpreis ca. **€ 200** (CHF 185,80) · **Vorauszahlung in den 3 Tagen vor Anre
 ## Zu erledigen
 
 - [x] ~~Hotelgarage Turin reservieren~~ — **nicht nötig.** Parkhaus Corso Bolzano 47/A, 11,80 € statt 19 €, 4 Min Fußweg, 24 h offen, einfach hinfahren. Siehe [02-turin-parken.md](02-turin-parken.md)
-- [ ] **Restaurant Turin reservieren** und nach Augustferien fragen
+- [ ] **Al Monte dei Cappuccini anrufen** — +39 011 6600312 — Augustferien nicht verifizierbar. Plan B: Tre Galline +39 011 4366553 oder Solferino +39 011 535851
 - [ ] **Schweizer Vignette** (CHF 40) — wird zweimal gebraucht, Hin- und Rückweg über Locarno
 - [ ] Vorauszahlung Locarno beachten (3 Tage vor 20.8., also ab 17.8.)
 - [ ] Optional: Castello di Ama Führung buchen — +39 0577 746069
