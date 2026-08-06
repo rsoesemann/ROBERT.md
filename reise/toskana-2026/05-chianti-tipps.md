@@ -19,7 +19,7 @@ Winziges, vollständig erhaltenes Wehrdorf, urkundlich seit **1013**. Mächtiger
 Romanische Wehrkirche des 12. Jahrhunderts mit gotischen Elementen und Fresken des 15. Jahrhunderts, allein zwischen Weinbergen. Man findet sie nur, wenn man weiß, dass es sie gibt. Zufahrt über eine Schotterstraße.
 
 ### Badia a Coltibuono
-Vallombrosaner-Kloster von **1037**. Führung durch Kirche, Kreuzgang und den alten Klostergarten mit den Heilkräuterbeeten. Dazu ein renommiertes Weingut und ein Restaurant mit Terrasse über dem Tal. Der klassische erste Ausflug nach der Ankunft.
+Vallombrosaner-Kloster, **1051** von Giovanni Gualberto gegründet — die Vorgängerkirche San Lorenzo ist schon 1037 belegt. Führung durch Kirche, Kreuzgang und den alten Klostergarten mit den Heilkräuterbeeten. Dazu ein renommiertes Weingut und ein Restaurant mit Terrasse über dem Tal. Der klassische erste Ausflug nach der Ankunft.
 
 ### Castello di Brolio
 Hier hat **Bettino Ricasoli um 1872 die Chianti-Formel festgeschrieben** — der historische Nullpunkt. Schlossgarten, Panoramaterrasse über halb Südtoskana, Familienmuseum, Osteria. Funktioniert auch mit Teenagern, weil es echt was zu sehen gibt.
