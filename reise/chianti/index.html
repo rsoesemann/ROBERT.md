@@ -94,6 +94,12 @@ h3{font-size:19px;line-height:1.3;margin:0 0 3px;letter-spacing:-.01em}
 .src{text-decoration:none;border:1px solid var(--line);color:var(--ink);
   border-radius:8px;padding:9px 14px;font-size:15px}
 .go:hover{opacity:.85}.src:hover{border-color:var(--ink)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--warn);
+  border-radius:12px;padding:14px 16px;margin-top:22px;font-size:15px}
+.box p{margin:0 0 8px}.box p:last-child{margin:0}
+.box ul{margin:0 0 8px;padding-left:20px;color:var(--grey)}
+.box li{margin:3px 0}
+.lead{margin:12px 0 0;color:var(--grey);font-size:15px}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--grey);font-size:14px}
 @media (max-width:420px){.shot img{height:170px}h3{font-size:18px}}
 </style>
@@ -105,10 +111,88 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   <h1>Chianti — Ideen für 15 Tage</h1>
   <p>Alles im Umkreis von Gaiole. Jeder Eintrag hat zwei Links: <b>Google Maps</b> für Hinfahren, Fotos und aktuelle Öffnungszeiten. <b>Nachlesen</b> zum Prüfen, ob das stimmt, was hier steht.</p>
   <nav>
-    <a href="#wein">Weingüter</a><a href="#bau">Burgen &amp; Klöster</a><a href="#dorf">Dörfer</a>
+    <a href="#villa">Von der Villa</a><a href="#wein">Weingüter</a><a href="#bau">Burgen &amp; Klöster</a><a href="#dorf">Dörfer</a>
     <a href="#kunst">Kunst</a><a href="#natur">Raus &amp; Baden</a><a href="#essen">Essen</a><a href="#fest">Ein Termin</a>
   </nav>
 </header>
+
+<div class="box">
+  <p><b>Bargeld einstecken.</b> Die Nebenkosten der Villa werden alle <b>bar vor Ort</b> bezahlt:</p>
+  <ul>
+    <li>Kurtaxe <b>2 € pro Person und Nacht</b>, nur für die ersten 7 Nächte → bei 4 Personen <b>56 €</b></li>
+    <li>Heizung und Klimaanlage nach Verbrauch</li>
+    <li>Hund bis 30 kg: 5 € pro Tag</li>
+  </ul>
+  <p>Handtücher und Bettwäsche sind kostenlos gestellt.</p>
+</div>
+
+<h2 id="villa">Von der Villa empfohlen</h2>
+<p class="lead">Diese fünf kommen aus Paulas Begrüßungsmail über Booking. Sie sind die nächstgelegenen Tipps auf der ganzen Seite — und ihre Fahrzeiten sind ab der Villa gemessen, nicht ab Gaiole.</p>
+
+<article class="item">
+  <div class="body">
+    <h3>Das Dorf nebenan — zu Fuß erreichbar</h3>
+    <p class="realname">Lecchi in Chianti</p>
+    <p class="what">5 Min mit dem Auto · <b>Oder in 1,5 km zu Fuß.</b> Von Montebuoni führt ein gepflegter, hügeliger Weg hinüber. Der beste Abendspaziergang, den ihr habt — und am Ziel gibt es was zu trinken.</p>
+    <p class="when">Immer</p>
+    <div class="links">
+      <a class="go" href="https://www.google.com/maps/search/?api=1&query=Lecchi%20in%20Chianti" target="_blank" rel="noopener">Google Maps</a>
+      <a class="src" href="https://www.google.com/search?q=Lecchi+in+Chianti+Gaiole" target="_blank" rel="noopener">Nachlesen</a>
+    </div>
+  </div>
+</article>
+
+<article class="item">
+  <div class="body">
+    <h3>Weingut mit Verkostung und Mittagessen, sechs Minuten weg</h3>
+    <p class="realname">Casanuova di Ama, Lecchi in Chianti</p>
+    <p class="what">6 Min · <b>Das Nächste von allem.</b> Verkostung und Mittagessen zusammen. Nicht zu verwechseln mit dem großen Castello di Ama weiter oben — das ist ein eigener Betrieb.</p>
+    <p class="when warn">Vorher anrufen oder mailen</p>
+    <div class="links">
+      <a class="go" href="https://www.google.com/maps/search/?api=1&query=Casanuova%20di%20Ama%20Lecchi%20in%20Chianti" target="_blank" rel="noopener">Google Maps</a>
+      <a class="src" href="https://www.google.com/search?q=Casanuova+di+Ama+winery+Lecchi+in+Chianti" target="_blank" rel="noopener">Nachlesen</a>
+    </div>
+  </div>
+</article>
+
+<article class="item">
+  <div class="body">
+    <h3>Das Restaurant in Lecchi</h3>
+    <p class="realname">Ristorante Malborghetto, Lecchi in Chianti</p>
+    <p class="what">5 Min · Von der Villa ausdrücklich empfohlen. Toskanische Küche, und nah genug, dass einer laufen und der andere fahren kann.</p>
+    <p class="when warn">Zeiten nicht geprüft — vorher anrufen</p>
+    <div class="links">
+      <a class="go" href="https://www.google.com/maps/search/?api=1&query=Ristorante%20Malborghetto%20Lecchi%20in%20Chianti" target="_blank" rel="noopener">Google Maps</a>
+      <a class="src" href="https://www.google.com/search?q=Ristorante+Malborghetto+Lecchi+in+Chianti" target="_blank" rel="noopener">Nachlesen</a>
+    </div>
+  </div>
+</article>
+
+<article class="item">
+  <div class="body">
+    <h3>Die rustikale Bar am Platz</h3>
+    <p class="realname">Bar Rinaldi, Lecchi in Chianti</p>
+    <p class="what">5 Min · Die einfachere Variante zum Malborghetto, ebenfalls mit toskanischen Gerichten. Das Ziel für den Fußweg von der Villa.</p>
+    <p class="when warn">Zeiten nicht geprüft — vorher anrufen</p>
+    <div class="links">
+      <a class="go" href="https://www.google.com/maps/search/?api=1&query=Bar%20Rinaldi%20Lecchi%20in%20Chianti" target="_blank" rel="noopener">Google Maps</a>
+      <a class="src" href="https://www.google.com/search?q=Bar+Rinaldi+Lecchi+in+Chianti" target="_blank" rel="noopener">Nachlesen</a>
+    </div>
+  </div>
+</article>
+
+<article class="item">
+  <div class="body">
+    <h3>Töpferei zum Zugucken und Mitnehmen</h3>
+    <p class="realname">Studio Radianza, Lecchi in Chianti</p>
+    <p class="what">5 Min · Keramikwerkstatt im Dorf. Das Souvenir, das nicht aus dem Regal kommt — und mit 14 und 16 interessanter als noch eine Kirche.</p>
+    <p class="when warn">Zeiten nicht geprüft — vorher anrufen</p>
+    <div class="links">
+      <a class="go" href="https://www.google.com/maps/search/?api=1&query=Studio%20Radianza%20Lecchi%20in%20Chianti" target="_blank" rel="noopener">Google Maps</a>
+      <a class="src" href="https://www.google.com/search?q=Studio+Radianza+ceramics+Lecchi+in+Chianti" target="_blank" rel="noopener">Nachlesen</a>
+    </div>
+  </div>
+</article>
 
 <h2 id="wein">Weingüter</h2>
 
@@ -353,7 +437,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
   <div class="body">
     <h3>Skulpturen im Steineichenwald</h3>
     <p class="realname">Parco Sculture del Chianti, Pievasciata</p>
-    <p class="what">40 Min · <b>Funktioniert mit Teenagern.</b> Ein Kilometer Rundweg im Schatten, App mit Erklärungen. 10 € pro Erwachsenem. Telefon +39 0577 357151.</p>
+    <p class="what">17 Min ab der Villa (laut Paula), rund 40 Min ab Gaiole · <b>Funktioniert mit Teenagern.</b> Ein Kilometer Rundweg im Schatten, App mit Erklärungen. 10 € pro Erwachsenem. Telefon +39 0577 357151.</p>
     <p class="when">Täglich ab 10 Uhr, Dienstag bis 20 Uhr</p>
     <div class="links">
       <a class="go" href="https://www.google.com/maps/search/?api=1&query=Parco%20Sculture%20del%20Chianti%20Pievasciata" target="_blank" rel="noopener">Google Maps</a>
@@ -537,9 +621,9 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:v
 </article>
 
 <footer>
-  Fahrzeiten grob geschätzt ab Gaiole. Öffnungszeiten Stand 6.8.2026 aus Google Places — im August ändern Betriebe das kurzfristig. Telefonnummern stehen bei jedem Eintrag.<br><br>
+  Fahrzeiten grob geschätzt <b>ab Gaiole</b> — und die Villa liegt selbst 18 Min von Gaiole und 15 Min von Radda entfernt. Für alles außerhalb des Abschnitts „Von der Villa empfohlen“ also eher großzügig rechnen; dessen Zeiten sind ab der Villa gemessen. Öffnungszeiten Stand 6.8.2026 aus Google Places — im August ändern Betriebe das kurzfristig. Telefonnummern stehen bei jedem Eintrag.<br><br>
   Zwei Zeiten wurden gegengeprüft und korrigiert: Die <b>Basilica di San Francesco in Arezzo</b> hat keinen Ruhetag am Mittwoch, und die Reservierung für die Cappella Bacci muss mindestens drei Werktage vorher bezahlt sein. Das <b>Castello di Ama</b> ist nicht nur Montag bis Mittwoch offen, sondern Montag bis Samstag.<br><br>
-  15 Fotos von Wikimedia Commons, jedes verlinkt auf seine Quelldatei. Fotografen und Lizenz stehen im Bild.
+  Die fünf Einträge unter „Von der Villa empfohlen“ sowie die Angaben zu Kurtaxe und Nebenkosten stammen aus der Begrüßungsmail von Paula über Booking. Ihre Öffnungszeiten sind nicht gegengeprüft.<br><br>15 Fotos von Wikimedia Commons, jedes verlinkt auf seine Quelldatei. Fotografen und Lizenz stehen im Bild.
 </footer>
 
 </div>
