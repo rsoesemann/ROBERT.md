@@ -2,9 +2,16 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-mkdir -p ~/.claude/skills
+mkdir -p ~/.claude/skills ~/.codex
 
-ln -sfn "$SCRIPT_DIR/claude/CLAUDE.md" ~/.claude/CLAUDE.md
+# One instruction file for every agent: Claude Code reads CLAUDE.md, Codex reads AGENTS.md.
+for target in ~/.claude/CLAUDE.md ~/.codex/AGENTS.md; do
+    # A real file here is a stale copy; keep it as .bak instead of silently overwriting it.
+    if [ -f "$target" ] && [ ! -L "$target" ]; then
+        mv "$target" "$target.bak"
+    fi
+    ln -sfn "$SCRIPT_DIR/AGENTS.md" "$target"
+done
 ln -sfn "$SCRIPT_DIR/claude/settings.json" ~/.claude/settings.json
 ln -sfn "$SCRIPT_DIR/claude/rules" ~/.claude/rules
 
@@ -23,9 +30,10 @@ for skill_dir in "$SCRIPT_DIR"/claude/skills/*/; do
     ln -sfn "$skill_dir" "$target"
 done
 
-echo "Done. Symlinks created in ~/.claude/"
+echo "Done. Symlinks created in ~/.claude/ and ~/.codex/"
 echo ""
-echo "  ~/.claude/CLAUDE.md     -> claude/CLAUDE.md"
+echo "  ~/.claude/CLAUDE.md     -> AGENTS.md"
+echo "  ~/.codex/AGENTS.md      -> AGENTS.md"
 echo "  ~/.claude/settings.json -> claude/settings.json"
 echo "  ~/.claude/rules/        -> claude/rules/"
 for skill_dir in "$SCRIPT_DIR"/claude/skills/*/; do
@@ -33,4 +41,4 @@ for skill_dir in "$SCRIPT_DIR"/claude/skills/*/; do
     echo "  ~/.claude/skills/$skill_name/ -> claude/skills/$skill_name/"
 done
 echo ""
-echo "Start a new Claude Code session to pick up the changes."
+echo "Start a new Claude Code or Codex session to pick up the changes."
