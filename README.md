@@ -14,7 +14,7 @@ The hard part isn't *what* to put in these files — it's *where*. What's mine p
 <pre>┌──────────────────────────────────────────────────────────────┐
 │  Me (<a href="https://github.com/rsoesemann/ROBERT.md">ROBERT.md</a>)                                              │
 │  How I talk. How I code. What annoys me.                     │
-│  <a href="claude/SOUL.md">SOUL.md</a>, <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                       │
+│  <a href="claude/CLAUDE.md">CLAUDE.md</a>, <a href="claude/rules/salesforce/">rules/salesforce/</a>                                │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  Project (CLAUDE.md in your repo)                      │  │
@@ -29,22 +29,11 @@ Claude Code [merges all of this](https://code.claude.com/docs/en/best-practices)
 
 ### Instructions
 
-**[`claude/SOUL.md`](claude/SOUL.md)** — My personality. Snarky, German, no fluff. So the AI talks like a sharp colleague, not a support bot. Inspired by [Peter Steinberger's OpenClaw](https://github.com/openclaw/openclaw). Referenced from `CLAUDE.md` and symlinked into `~/.claude/`.
-
-**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Points to SOUL.md for tone. Non-negotiable. Three of the Working Style bullets ("fail loud", "surface conflicts", "match the codebase's surface style, not its quality") were sharpened after digging through [Andrej Karpathy's January 2026 thread](https://x.com/karpathy/status/2015883857489522876) on Claude's coding pitfalls — most of his observations were already covered here or by Claude Code itself, but those three earned their place. The last one is a brownfield-aware twist: match the repo's style, but don't inherit its bad habits.
+**[`claude/CLAUDE.md`](claude/CLAUDE.md)** — My five coding commandments. Non-negotiable. Three of the Working Style bullets ("fail loud", "surface conflicts", "match the codebase's surface style, not its quality") were sharpened after digging through [Andrej Karpathy's January 2026 thread](https://x.com/karpathy/status/2015883857489522876) on Claude's coding pitfalls — most of his observations were already covered here or by Claude Code itself, but those three earned their place. The last one is a brownfield-aware twist: match the repo's style, but don't inherit its bad habits.
 
 **[`claude/rules/salesforce/`](claude/rules/salesforce/)** — My brutal, [PMD-backed](claude/skills/sf-code-analyzer/pmd-ruleset.xml) Apex standards. The machine checks what I forget.
 
-**[`claude/settings.json`](claude/settings.json)** — So Claude stops nagging me for permission before every git push. Also carries a `UserPromptSubmit` hook that re-injects SOUL.md with every prompt — the voice rules decay over a long session, this keeps them fresh.
-
-### Opting a project out of SOUL
-
-Some projects don't want the voice rules — a spec-interview skill like Speccy needs Claude to ask questions, which SOUL actively discourages. Two files in the project switch it off:
-
-- **`.claude/.no-soul`** — an empty marker file. The hook in `settings.json` checks for it and skips the SOUL injection in that project.
-- **`.claude/settings.local.json`** with `{"claudeMdExcludes": ["**/SOUL.md"]}` — stops the `@SOUL.md` import from `CLAUDE.md` loading there.
-
-Everything else (the git-commit rules, coding standards) still applies. Delete the marker to switch SOUL back on.
+**[`claude/settings.json`](claude/settings.json)** — So Claude stops nagging me for permission before every git push.
 
 ### Skills
 
@@ -62,7 +51,6 @@ I run [`install.sh`](install.sh) once. It symlinks everything into `~/.claude/`,
 
 ```text
 ~/.claude/CLAUDE.md                   →  this repo/claude/CLAUDE.md
-~/.claude/SOUL.md                     →  this repo/claude/SOUL.md
 ~/.claude/settings.json               →  this repo/claude/settings.json
 ~/.claude/rules/                      →  this repo/claude/rules/
 ~/.claude/skills/sf-code-analyzer/    →  this repo/claude/skills/sf-code-analyzer/

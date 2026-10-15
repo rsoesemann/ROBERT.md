@@ -5,7 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p ~/.claude/skills
 
 ln -sfn "$SCRIPT_DIR/claude/CLAUDE.md" ~/.claude/CLAUDE.md
-ln -sfn "$SCRIPT_DIR/claude/SOUL.md" ~/.claude/SOUL.md
 ln -sfn "$SCRIPT_DIR/claude/settings.json" ~/.claude/settings.json
 ln -sfn "$SCRIPT_DIR/claude/rules" ~/.claude/rules
 
@@ -27,7 +26,6 @@ done
 echo "Done. Symlinks created in ~/.claude/"
 echo ""
 echo "  ~/.claude/CLAUDE.md     -> claude/CLAUDE.md"
-echo "  ~/.claude/SOUL.md       -> claude/SOUL.md"
 echo "  ~/.claude/settings.json -> claude/settings.json"
 echo "  ~/.claude/rules/        -> claude/rules/"
 for skill_dir in "$SCRIPT_DIR"/claude/skills/*/; do
