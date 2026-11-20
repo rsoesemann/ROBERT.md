@@ -9,9 +9,13 @@ paths:
 
 # Salesforce / Apex Coding Standards
 
+You are the owner and long-term maintainer of this codebase, and its design is up to you.
+
+Where a repo's own rules say something different, follow the repo.
+
 ## Verification
 
-Many of these principles are enforced by a [custom PMD ruleset](../skills/sf-code-analyzer/pmd-ruleset.xml) via `/sf-code-analyzer`. **After creating or modifying any `.cls`, `.trigger`, or `*-meta.xml` file, run `/sf-code-analyzer` on the changed files before considering the task done.**
+Many of these principles are enforced by a custom PMD ruleset via the `sf-code-analyzer` skill. **After creating or modifying any `.cls`, `.trigger`, or `*-meta.xml` file, run the `sf-code-analyzer` skill on the changed files before considering the task done.**
 
 ## Core Principles
 
@@ -19,7 +23,7 @@ Many of these principles are enforced by a [custom PMD ruleset](../skills/sf-cod
 
 Methods have exactly one `return` statement at the end. Use the `result` variable pattern.
 
-(Checked by custom PMD rule: [`OnlyOneReturnPerMethod`](../skills/sf-code-analyzer/pmd-ruleset.xml) and [`DeclareWhatYouReturnFirstAndCallItResult`](../skills/sf-code-analyzer/pmd-ruleset.xml))
+(Checked by custom PMD rule: `OnlyOneReturnPerMethod` and `DeclareWhatYouReturnFirstAndCallItResult`)
 
 ```java
 private List<Account> findAccounts(String name) {
@@ -41,7 +45,7 @@ Never use: `Service`, `Handler`, `Manager`, `Helper`, `Util`, `Wrapper`
 
 These names hide intent. Use domain names that reveal what the class represents.
 
-(Checked by custom PMD rule: [`ClassNamesBecomeSelfFulfillingProphecies`](../skills/sf-code-analyzer/pmd-ruleset.xml))
+(Checked by custom PMD rule: `ClassNamesBecomeSelfFulfillingProphecies`)
 
 ### Comments: When Forbidden, When Required
 
@@ -52,7 +56,7 @@ However, there are exactly two exceptions where `// Note:` comments ARE required
 1. **Strange code that must be that way** — Code that violates normal conventions but is necessary. Explain why it's an exception.
 2. **PMD suppressions** — Every `@SuppressWarnings` must have a `// Note:` comment explaining why the rule is being skipped.
 
-(Checked by custom PMD rules: [`CommentsOftenExcuseForBadCodeAndTests`](../skills/sf-code-analyzer/pmd-ruleset.xml) and [`CheckIfProperFalsePositive`](../skills/sf-code-analyzer/pmd-ruleset.xml))
+(Checked by custom PMD rules: `CommentsOftenExcuseForBadCodeAndTests` and `CheckIfProperFalsePositive`)
 
 Examples:
 
@@ -71,7 +75,7 @@ private static List<Account> fetchAccounts() { ... }
 
 Never prefix a test method with `test`. It adds no information — the `@IsTest` annotation and `_Test` class suffix already say it's a test.
 
-(Checked by custom PMD rule: [`TestsShouldNotStartWithTest`](../skills/sf-code-analyzer/pmd-ruleset.xml))
+(Checked by custom PMD rule: `TestsShouldNotStartWithTest`)
 
 ### Test Method Names: Match the Scope of What's Being Verified
 
@@ -91,8 +95,6 @@ Once you need to distinguish cases, use the shortest name that differentiates th
 **When a long descriptive name *is* warranted:**
 Integration-style tests with real setup, exercising a non-obvious behavior worth calling out, can use sentence-style names (`returnsOverdueTasksFirst()`). The rule of thumb: the name's length should roughly match how much real behavior the test exercises. Heavy mocks → short name. Real data + real assertions → longer name is fine.
 
-**Always:** one focused assertion (or a tightly related set). If you need a sentence to explain what the test does, the test is probably doing too much — split it.
-
 ### Use Salesforce Standards, Don't Reinvent
 
 Don't invent workarounds for problems Salesforce already solved. Use the built-in features:
@@ -103,11 +105,67 @@ Don't invent workarounds for problems Salesforce already solved. Use the built-i
 - Platform Events (not custom polling mechanisms)
 - Salesforce-native configuration over custom metadata
 
+### Test Quality Rules
+
+These rules serve readability. A few meaningful tests beat many pseudo-tests. If following a rule makes the tests longer or harder to read, don't.
+
+1. **Test behaviors, not methods.** Write one test for each result a caller can tell apart: the happy path, plus each input that changes the result (empty, at a limit, refused, failing). If two inputs give the same result, write one test.
+2. **One behavior per test, with as many assertions as it needs.** A happy path may check three things. For a returned list, check that it isn't empty, then check the value that matters. A test is too big when its assertions describe different behaviors. Don't pack several values into one list to compare them in a single assertion.
+3. **Every test must be able to fail, and its name says what it checks.** If the behavior it names broke, the test must go red. A failure test must fail only for the reason it tests, not because its setup is also invalid.
+4. **Assert what the code produced, as literal values.** Never assert a mock's return value, the test's own setup, a constant, or a value computed by the code under test. Never "this or that".
+5. **For errors, assert the specific message or type.** Catching any exception and asserting that it isn't null is not a test.
+6. **Test only our behavior, and only through public methods.** Don't test Salesforce itself (plain DML, formula fields, JSON). Don't test trivial getters or plumbing. Don't use `@TestVisible` just to reach coverage.
+7. **Test each class in its own `_Test`.** No tests of other classes on the side, and no duplicates. Setup that several tests or test classes repeat goes into a builder or helper.
+8. **Line coverage is the floor, not the goal.** If lines are still uncovered after every behavior is tested, question the code before writing a test for those lines.
+9. **Deleting a useless test is a good change.**
+
+Good (rules 1, 2, 4 — one behavior, a few assertions, literal values; minimal examples):
+
+```java
+@IsTest
+private static void returnsOverdueTasksFirst() {
+
+    // Setup
+    Id contactId = (Id) new Contact_t().persist().Id;
+    new Task_t().whoId(contactId).subject('Late').dueDate(Date.today().addDays(-3)).persist();
+
+    // Exercise
+    List<Task> actual = new OpenTasks(contactId).list();
+
+    // Verify
+    Assert.isFalse(actual.isEmpty());
+    Assert.areEqual('Late', actual[0].Subject);
+}
+```
+
+```java
+@IsTest
+private static void refusesBlankQuestion() {
+
+    // Setup
+    AskAction.Input input = new AskAction.Input();
+
+    // Exercise
+    String message;
+    try { AskAction.execute(new List<AskAction.Input>{ input }); }
+    catch(AskAction.AskException e) { message = e.getMessage(); }
+
+    // Verify
+    Assert.areEqual('Question is required', message);
+}
+```
+
+Bad (rule 4, "this or that": the assertion accepts either key, so it passes whichever one the code produced):
+
+```java
+Assert.areEqual('Marcus Bell', first.containsKey('resource') ? first.get('resource') : first.get('name'));
+```
+
 ### Test Isolation — Every Test Stands Alone
 
 Each test method must be completely isolated. No shared state, no global test variables, no `@TestSetup`.
 
-Setup code belongs in the test method itself, called via a helper method:
+Repeated setup goes into a builder or helper (test rule 7). Setup code belongs in the test method itself, called via a helper method:
 
 ```java
 @IsTest
@@ -247,10 +305,10 @@ private class ClassName_Test {
 
 Assertions have no message parameter. This is a red flag: if you need a message to explain what an assertion does, your test method is doing too much.
 
-The test method name should fully describe what is being verified. One assertion per test, or a tightly related set. If you're writing assertion messages, break the test into smaller, more focused tests:
+The test method name should fully describe what is being verified. If you're writing assertion messages, the test is checking more than one behavior; split it (rule 2 of the test rules):
 
 - Bad: `testUserCreation()` with `Assert.areEqual(user.status, 'active', 'User should have active status')`
-  - Problem: One method testing multiple things (creation, status, ...)
+  - Problem: One method testing several behaviors (creation, status, ...)
   - Needs a message because the name doesn't say what's being verified
 
 - Good: `createsUserWithActiveStatus()` with `Assert.areEqual('active', user.status)`
@@ -269,18 +327,20 @@ String response = new PromptTemplate('ExtractTasks')
 
 ### SOQL Formatting
 
-Long queries: each field on its own line, aligned:
+A query that fits on one line stays on one line:
 
 ```java
-List<Project__c> projects = [SELECT Id, Name,
-                                    Status__c,
-                                    StartDate__c,
-                                    (SELECT Id, Name,
-                                            OwnerId, Owner.Name
-                                    FROM Tasks__r)
-                            FROM Project__c
-                            WHERE Id = :projectId
-                            WITH USER_MODE];
+Id typeId = [SELECT Id FROM CustomNotificationType WHERE DeveloperName = 'GenericNotification'].Id;
+```
+
+When it gets too long, keep the field list together and break before `FROM` or `WHERE`. Align the following lines under `SELECT`. Never put each field on its own line.
+
+```java
+ContentVersion file = [SELECT VersionData, PathOnClient, FileExtension, ContentSize FROM ContentVersion
+                       WHERE ContentDocumentId = :analysis.DocumentId__c WITH USER_MODE];
+
+List<CompletionApi__mdt> result = [SELECT MasterLabel, Label, QualifiedApiName, DeveloperName, ApiKey__c, Settings__c
+                                   FROM CompletionApi__mdt WHERE QualifiedApiName = :apiName WITH SYSTEM_MODE];
 ```
 
 ### Invocable Actions
@@ -336,4 +396,3 @@ No `get` prefix:
 
 - Bad: `getAge()`, `getName()`
 - Good: `age()`, `name()`
-

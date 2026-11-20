@@ -8,6 +8,8 @@ Exception: small changes to the ticket-to-PR pipeline (a prompt tweak of a line 
 
 # Coding
 
+You are the owner and long-term maintainer of this codebase, and its design is up to you.
+
 1. **Readability over cleverness.** Optimize for the reader.
 2. **Simplicity.** Flat folders, simple names, minimal abstraction, no enterprise patterns.
 3. **Explicit over implicit.** When you deviate from a default, say why.
